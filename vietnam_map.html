@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_81bb28cca46efe43e16779ee3b411b49 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-locatecontrol/0.66.2/L.Control.Locate.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-locatecontrol/0.66.2/L.Control.Locate.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.css"/>
+</head>
+<body>
+    
+    
+    <div id="routing-panel">
+        <h4 style="margin:0 0 8px 0; color:#333;">Dẫn đường ngắn nhất</h4>
+        <input type="text" id="start-input" placeholder="Nhập điểm đón (A)..." />
+        <input type="text" id="end-input" placeholder="Nhập điểm đến (B)..." />
+        <button id="route-btn" onclick="calculateRoute()">Tìm đường đi</button>
+        <button id="clear-btn" onclick="clearRoute()">Xóa</button>
+        <div id="route-info"></div>
+    </div>
+
+    <style>
+        #routing-panel {
+            position: absolute;
+            top: 10px;
+            left: 50px;
+            z-index: 1000;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-family: Arial, sans-serif;
+            width: 260px;
+        }
+        #routing-panel input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 13px;
+        }
+        #routing-panel button {
+            padding: 7px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        #route-btn { background-color: #007bff; color: white; }
+        #clear-btn { background-color: #6c757d; color: white; }
+        #route-info {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+
+    <script>
+        var mapObj = null;
+        var startMarker = null;
+        var endMarker = null;
+        var routePolyline = null;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // Lấy đối tượng Map từ Folium
+            for (var key in window) {
+                if (key.startsWith("map_") && window[key] instanceof L.Map) {
+                    mapObj = window[key];
+                    break;
+                }
+            }
+
+            if (mapObj) {
+                // Click trên bản đồ để chọn nhanh điểm A và B
+                mapObj.on('click', function(e) {
+                    if (!startMarker) {
+                        setStartPoint(e.latLng.lat, e.latLng.lng, "Điểm chọn trên bản đồ");
+                    } else if (!endMarker) {
+                        setEndPoint(e.latLng.lat, e.latLng.lng, "Điểm chọn trên bản đồ");
+                        calculateRoute();
+                    }
+                });
+            }
+        });
+
+        // Tìm kiếm tọa độ qua API Geocoding Nominatim
+        async function geocode(query) {
+            var url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=vn`;
+            var response = await fetch(url);
+            var data = await response.json();
+            if (data && data.length > 0) {
+                return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), name: data[0].display_name };
+            }
+            return null;
+        }
+
+        function setStartPoint(lat, lng, label) {
+            if (startMarker) mapObj.removeLayer(startMarker);
+            startMarker = L.marker([lat, lng], {title: "Điểm đón (A)"}).addTo(mapObj)
+                .bindPopup("<b>Điểm đón (A)</b><br>" + label).openPopup();
+            document.getElementById('start-input').value = label;
+        }
+
+        function setEndPoint(lat, lng, label) {
+            if (endMarker) mapObj.removeLayer(endMarker);
+            endMarker = L.marker([lat, lng], {title: "Điểm đến (B)"}).addTo(mapObj)
+                .bindPopup("<b>Điểm đến (B)</b><br>" + label).openPopup();
+            document.getElementById('end-input').value = label;
+        }
+
+        // Tính toán đường đi ngắn nhất qua API OSRM
+        async function calculateRoute() {
+            var startText = document.getElementById('start-input').value;
+            var endText = document.getElementById('end-input').value;
+
+            if (!startMarker && startText) {
+                var pA = await geocode(startText);
+                if (pA) setStartPoint(pA.lat, pA.lon, pA.name);
+                else { alert("Không tìm thấy Điểm đón!"); return; }
+            }
+
+            if (!endMarker && endText) {
+                var pB = await geocode(endText);
+                if (pB) setEndPoint(pB.lat, pB.lon, pB.name);
+                else { alert("Không tìm thấy Điểm đến!"); return; }
+            }
+
+            if (!startMarker || !endMarker) {
+                alert("Vui lòng chọn/nhập đủ cả Điểm đón và Điểm đến!");
+                return;
+            }
+
+            var latLngA = startMarker.getLatLng();
+            var latLngB = endMarker.getLatLng();
+
+            var osrmUrl = `https://router.project-osrm.org/route/v1/driving/${latLngA.lng},${latLngA.lat};${latLngB.lng},${latLngB.lat}?overview=full&geometries=geojson`;
+
+            document.getElementById('route-info').innerText = "Đang tìm tuyến đường ngắn nhất...";
+
+            fetch(osrmUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.routes && data.routes.length > 0) {
+                        var route = data.routes[0];
+                        var coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+
+                        if (routePolyline) mapObj.removeLayer(routePolyline);
+
+                        // Vẽ tuyến đường đi
+                        routePolyline = L.polyline(coords, {color: '#0055FF', weight: 6, opacity: 0.85}).addTo(mapObj);
+                        mapObj.fitBounds(routePolyline.getBounds(), {padding: [50, 50]});
+
+                        var distKm = (route.distance / 1000).toFixed(2);
+                        var durationMin = Math.round(route.duration / 60);
+                        document.getElementById('route-info').innerHTML = `Khoảng cách: <b>${distKm} km</b><br>Thời gian: <b>~${durationMin} phút</b>`;
+                    } else {
+                        document.getElementById('route-info').innerText = "Không tìm thấy đường đi!";
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('route-info').innerText = "Lỗi khi kết nối máy chủ đường đi!";
+                });
+        }
+
+        function clearRoute() {
+            if (startMarker) mapObj.removeLayer(startMarker);
+            if (endMarker) mapObj.removeLayer(endMarker);
+            if (routePolyline) mapObj.removeLayer(routePolyline);
+            startMarker = null;
+            endMarker = null;
+            routePolyline = null;
+            document.getElementById('start-input').value = "";
+            document.getElementById('end-input').value = "";
+            document.getElementById('route-info').innerHTML = "";
+        }
+    </script>
+    
+    
+            <div class="folium-map" id="map_81bb28cca46efe43e16779ee3b411b49" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_81bb28cca46efe43e16779ee3b411b49 = L.map(
+                "map_81bb28cca46efe43e16779ee3b411b49",
+                {
+                    center: [16.047079, 108.20623],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 6,
+  "zoomControl": true,
+  "preferCanvas": true,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_b438d6e92e97f437cd4049b57590a6fd = L.tileLayer(
+                "https://mt1.google.com/vt/lyrs=m\u0026x={x}\u0026y={y}\u0026z={z}",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "Google Maps",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_b438d6e92e97f437cd4049b57590a6fd.addTo(map_81bb28cca46efe43e16779ee3b411b49);
+        
+    
+            var tile_layer_c1f24b52d4b7f752c2e67b450b0dcc4d = L.tileLayer(
+                "https://mt1.google.com/vt/lyrs=y\u0026x={x}\u0026y={y}\u0026z={z}",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "Google Maps Satellite",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_c1f24b52d4b7f752c2e67b450b0dcc4d.addTo(map_81bb28cca46efe43e16779ee3b411b49);
+        
+    
+            var tile_layer_d0ceb42639511c8d5b1818c49ff6b11c = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Tiles \u0026copy; Esri",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_d0ceb42639511c8d5b1818c49ff6b11c.addTo(map_81bb28cca46efe43e16779ee3b411b49);
+        
+    
+            var feature_group_67d2a956b95e7468db88c1add4689ff2 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_96ab916596342f59b93f526673964e55 = L.marker(
+                [21.028511, 105.804817],
+                {
+}
+            ).addTo(feature_group_67d2a956b95e7468db88c1add4689ff2);
+        
+    
+            var icon_9dc7f9bdd7d1d90b3e0b5915169876b0 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_03a8bee1cd121a789bba9a857d70e8df = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_181f27263c2080141ac3383004cc6498 = $(`<div id="html_181f27263c2080141ac3383004cc6498" style="width: 100.0%; height: 100.0%;"><b>Thủ đô Hà Nội</b></div>`)[0];
+                popup_03a8bee1cd121a789bba9a857d70e8df.setContent(html_181f27263c2080141ac3383004cc6498);
+            
+        
+
+        marker_96ab916596342f59b93f526673964e55.bindPopup(popup_03a8bee1cd121a789bba9a857d70e8df)
+        ;
+
+        
+    
+    
+            marker_96ab916596342f59b93f526673964e55.bindTooltip(
+                `<div>
+                     Thủ đô Hà Nội
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_96ab916596342f59b93f526673964e55.setIcon(icon_9dc7f9bdd7d1d90b3e0b5915169876b0);
+            
+    
+            var marker_00f2d926b4e8e72eac455049c05ea7f3 = L.marker(
+                [10.823099, 106.629664],
+                {
+}
+            ).addTo(feature_group_67d2a956b95e7468db88c1add4689ff2);
+        
+    
+            var icon_d9e9c2c8c1bbcdda555865bfe1486aaf = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_021d0299aa6a8d8a3fd433b2b87f41b5 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_6a6ac57cf9a7f249b5c199dd26660245 = $(`<div id="html_6a6ac57cf9a7f249b5c199dd26660245" style="width: 100.0%; height: 100.0%;"><b>TP. Hồ Chí Minh</b></div>`)[0];
+                popup_021d0299aa6a8d8a3fd433b2b87f41b5.setContent(html_6a6ac57cf9a7f249b5c199dd26660245);
+            
+        
+
+        marker_00f2d926b4e8e72eac455049c05ea7f3.bindPopup(popup_021d0299aa6a8d8a3fd433b2b87f41b5)
+        ;
+
+        
+    
+    
+            marker_00f2d926b4e8e72eac455049c05ea7f3.bindTooltip(
+                `<div>
+                     TP. Hồ Chí Minh
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_00f2d926b4e8e72eac455049c05ea7f3.setIcon(icon_d9e9c2c8c1bbcdda555865bfe1486aaf);
+            
+    
+            var marker_0523360dfcebfde5be749bc33700610b = L.marker(
+                [16.047079, 108.20623],
+                {
+}
+            ).addTo(feature_group_67d2a956b95e7468db88c1add4689ff2);
+        
+    
+            var icon_a08515151478c6a7a4eccc2ada661a64 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_86f62030be1911c31cbe5e4ec63342f0 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_7cef5d96c0fd76769c81b9ded137cc56 = $(`<div id="html_7cef5d96c0fd76769c81b9ded137cc56" style="width: 100.0%; height: 100.0%;"><b>TP. Đà Nẵng</b></div>`)[0];
+                popup_86f62030be1911c31cbe5e4ec63342f0.setContent(html_7cef5d96c0fd76769c81b9ded137cc56);
+            
+        
+
+        marker_0523360dfcebfde5be749bc33700610b.bindPopup(popup_86f62030be1911c31cbe5e4ec63342f0)
+        ;
+
+        
+    
+    
+            marker_0523360dfcebfde5be749bc33700610b.bindTooltip(
+                `<div>
+                     TP. Đà Nẵng
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_0523360dfcebfde5be749bc33700610b.setIcon(icon_a08515151478c6a7a4eccc2ada661a64);
+            
+    
+            var marker_aaf934cbffd39a84f5c374883958dee7 = L.marker(
+                [16.5, 112.0],
+                {
+}
+            ).addTo(feature_group_67d2a956b95e7468db88c1add4689ff2);
+        
+    
+            var icon_edb7de97d40f1133c655a77ce577a382 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_3b0b0790be43f7b0035d8dbede258bba = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_ef9af15a33c0acff236ce5acfc040b76 = $(`<div id="html_ef9af15a33c0acff236ce5acfc040b76" style="width: 100.0%; height: 100.0%;"><b>Quần đảo Hoàng Sa (Việt Nam)</b></div>`)[0];
+                popup_3b0b0790be43f7b0035d8dbede258bba.setContent(html_ef9af15a33c0acff236ce5acfc040b76);
+            
+        
+
+        marker_aaf934cbffd39a84f5c374883958dee7.bindPopup(popup_3b0b0790be43f7b0035d8dbede258bba)
+        ;
+
+        
+    
+    
+            marker_aaf934cbffd39a84f5c374883958dee7.bindTooltip(
+                `<div>
+                     Quần đảo Hoàng Sa (Việt Nam)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_aaf934cbffd39a84f5c374883958dee7.setIcon(icon_edb7de97d40f1133c655a77ce577a382);
+            
+    
+            var marker_14503337cf1306f21056c560de53e661 = L.marker(
+                [8.65, 111.92],
+                {
+}
+            ).addTo(feature_group_67d2a956b95e7468db88c1add4689ff2);
+        
+    
+            var icon_02b0cfdc4e1ad0764a6683bb4fdb97e7 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_d81955df95110752ef1c6055eeb14b74 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_c7037c95fc8257ea29fb3f1e9fe40e71 = $(`<div id="html_c7037c95fc8257ea29fb3f1e9fe40e71" style="width: 100.0%; height: 100.0%;"><b>Quần đảo Trường Sa (Việt Nam)</b></div>`)[0];
+                popup_d81955df95110752ef1c6055eeb14b74.setContent(html_c7037c95fc8257ea29fb3f1e9fe40e71);
+            
+        
+
+        marker_14503337cf1306f21056c560de53e661.bindPopup(popup_d81955df95110752ef1c6055eeb14b74)
+        ;
+
+        
+    
+    
+            marker_14503337cf1306f21056c560de53e661.bindTooltip(
+                `<div>
+                     Quần đảo Trường Sa (Việt Nam)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_14503337cf1306f21056c560de53e661.setIcon(icon_02b0cfdc4e1ad0764a6683bb4fdb97e7);
+            
+    
+            feature_group_67d2a956b95e7468db88c1add4689ff2.addTo(map_81bb28cca46efe43e16779ee3b411b49);
+        
+    
+            var locate_control_9e9454751da16dd302ea5a7ac2ab2e8e = L.control.locate(
+                {"flyTo": true, "keepCurrentZoomLevel": true, "strings": {"title": "V\u1ecb tr\u00ed c\u1ee7a t\u00f4i"}}
+            ).addTo(map_81bb28cca46efe43e16779ee3b411b49);
+            
+        
+    
+            var tile_layer_c50953d518ec08face1ac38fa9cb3fe7 = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+                {"attribution": "Esri", "detect_retina": false, "max_native_zoom": 18, "max_zoom": 18, "min_zoom": 0, "no_wrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            );
+            var mini_map_c42856bff03ad96f188b5529fb07fcf4 = new L.Control.MiniMap(
+                tile_layer_c50953d518ec08face1ac38fa9cb3fe7,
+                {
+  "position": "bottomright",
+  "width": 150,
+  "height": 150,
+  "collapsedWidth": 25,
+  "collapsedHeight": 25,
+  "zoomLevelOffset": -5,
+  "centerFixed": false,
+  "zoomAnimation": false,
+  "toggleDisplay": true,
+  "autoToggleDisplay": false,
+  "minimized": false,
+}
+            );
+            map_81bb28cca46efe43e16779ee3b411b49.addControl(mini_map_c42856bff03ad96f188b5529fb07fcf4);
+        
+    
+            var layer_control_fdf99bdbe4270eab80a2a2ae2cb9f5b1_layers = {
+                base_layers : {
+                    "Google Maps (\u0110\u01b0\u1eddng x\u00e1)" : tile_layer_b438d6e92e97f437cd4049b57590a6fd,
+                    "Google Hybrid (V\u1ec7 tinh + T\u00ean \u0111\u01b0\u1eddng)" : tile_layer_c1f24b52d4b7f752c2e67b450b0dcc4d,
+                    "V\u1ec7 tinh Esri (Nh\u00e0 c\u1eeda chi ti\u1ebft)" : tile_layer_d0ceb42639511c8d5b1818c49ff6b11c,
+                },
+                overlays :  {
+                    "Th\u00e0nh ph\u1ed1 ch\u00ednh" : feature_group_67d2a956b95e7468db88c1add4689ff2,
+                },
+            };
+            let layer_control_fdf99bdbe4270eab80a2a2ae2cb9f5b1 = L.control.layers(
+                layer_control_fdf99bdbe4270eab80a2a2ae2cb9f5b1_layers.base_layers,
+                layer_control_fdf99bdbe4270eab80a2a2ae2cb9f5b1_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": false,
+  "autoZIndex": true,
+}
+            ).addTo(map_81bb28cca46efe43e16779ee3b411b49);
+
+        
+</script>
+</html>
