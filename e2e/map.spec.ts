@@ -72,6 +72,14 @@ test('the base map falls back to OpenStreetMap France when the main tile server 
   await expect(page.getByRole('link', { name: 'OpenStreetMap France' })).toBeVisible();
 });
 
+test('the base map also falls back when the main tile server hangs instead of failing', async ({ page }) => {
+  const calls = await mockMapServices(page, { tiles: 'hang' });
+  await fresh(page, '#driver-nav-RE-003');
+  await expect.poll(() => page.locator('.leaflet-tile-loaded').count(), { timeout: 15_000 }).toBeGreaterThan(3);
+  expect(calls.fallbackTiles).toBeGreaterThan(0);
+  await expect(page.getByText(/Không tải được bản đồ nền/)).toHaveCount(0);
+});
+
 test('without any routing service, distances are a labelled straight-line estimate', async ({ page }) => {
   await mockMapServices(page, { answer: [], tiles: false });
   await fresh(page, '#driver-map');

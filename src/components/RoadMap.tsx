@@ -67,6 +67,8 @@ export interface RoadMapProps {
  * Keyless raster tiles from OpenStreetMap. CARTO's basemaps were dropped: they now answer every
  * request without an API key with an "API key required" image, which never triggers a fallback.
  */
+/** How long the first tile may take before trying the next provider. */
+const TILE_WAIT_MS = 5000;
 const OSM = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
 const TILES: { url: string; options: L.TileLayerOptions }[] = [
   {
@@ -167,40 +169,52 @@ export default function RoadMap({
     const m = L.map(el.current, { zoomControl: false, attributionControl: false, center: [10.875, 106.8], zoom: 14, zoomSnap: 0.25 });
     const attribution = L.control.attribution({ prefix: '<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>' }).addTo(m).addAttribution(ROUTING_ATTRIBUTION);
     if (zoomControl) L.control.zoom({ position: 'topright', zoomInTitle: 'Phóng to', zoomOutTitle: 'Thu nhỏ' }).addTo(m);
-    // Base tiles, falling back to the next provider if the first never loads a tile. The layer is
-    // re-pointed rather than removed: removing a layer mid-zoom breaks Leaflet's animation.
+    // Base tiles, falling back to the next provider if the first never loads a tile: after four tile
+    // errors, or after TILE_WAIT_MS with nothing loaded (a blocked host can hang instead of failing).
+    // The layer is re-pointed rather than removed: removing a layer mid-zoom breaks Leaflet's animation.
     let provider = 0;
     let loaded = 0;
     let errors = 0;
+    let watchdog = 0;
     const tileLayer = L.tileLayer(TILES[0].url, TILES[0].options).addTo(m);
+    const arm = () => {
+      window.clearTimeout(watchdog);
+      if (provider + 1 < TILES.length) watchdog = window.setTimeout(next, TILE_WAIT_MS);
+    };
+    function next() {
+      window.clearTimeout(watchdog);
+      if (map.current !== m || loaded > 0) return;
+      provider++;
+      if (provider >= TILES.length) {
+        setTiles('failed');
+        return;
+      }
+      errors = 0;
+      const t = TILES[provider];
+      tileLayer.options.subdomains = t.options.subdomains ?? 'abc';
+      tileLayer.options.maxZoom = t.options.maxZoom;
+      tileLayer.getAttribution = () => t.options.attribution ?? '';
+      attribution.removeAttribution(TILES[provider - 1].options.attribution ?? '').addAttribution(t.options.attribution ?? '');
+      tileLayer.setUrl(t.url);
+      arm();
+    }
     tileLayer.on('tileload', () => {
       loaded++;
+      window.clearTimeout(watchdog);
       setTiles('ok');
     });
     tileLayer.on('tileerror', () => {
       errors++;
       if (loaded > 0 || errors !== 4) return;
-      window.setTimeout(() => {
-        if (map.current !== m || loaded > 0) return;
-        provider++;
-        if (provider >= TILES.length) {
-          setTiles('failed');
-          return;
-        }
-        errors = 0;
-        const t = TILES[provider];
-        tileLayer.options.subdomains = t.options.subdomains ?? 'abc';
-        tileLayer.options.maxZoom = t.options.maxZoom;
-        tileLayer.getAttribution = () => t.options.attribution ?? '';
-        attribution.removeAttribution(TILES[provider - 1].options.attribution ?? '').addAttribution(t.options.attribution ?? '');
-        tileLayer.setUrl(t.url);
-      }, 0);
+      window.setTimeout(next, 0);
     });
+    arm();
     m.on('dragstart', () => cb.current.onUserMove?.());
     map.current = m;
     const ro = new ResizeObserver(() => m.invalidateSize());
     ro.observe(el.current);
     return () => {
+      window.clearTimeout(watchdog);
       ro.disconnect();
       m.remove();
       map.current = null;

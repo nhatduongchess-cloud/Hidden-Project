@@ -38,7 +38,7 @@ npm run dev          # http://localhost:5173
 npm test             # 73 domain unit tests (Vitest)
 npm run build        # type-check + static site in dist/
 npm run preview      # serve dist/ on http://localhost:4173
-npm run test:e2e     # 18 Playwright browser tests against the production build (map services stubbed)
+npm run test:e2e     # 19 Playwright browser tests against the production build (map services stubbed)
 npm run build:single # one self-contained HTML file in dist-single/index.html
 ```
 
@@ -132,7 +132,7 @@ zone, with a phone-navigation interface, and RE Hub plans the best visiting orde
   and list says which one produced it. Both servers are free community demos with fair-use limits; a
   pilot would self-host one on the same OpenStreetMap data.
 - **Base map**: OpenStreetMap's own tiles (`tile.openstreetmap.org`), then OpenStreetMap France if they
-  fail, then a notice that the base map could not load. CARTO's basemaps are not used: they now return an
+  fail or stay silent for 5 s, then a notice that the base map could not load. CARTO's basemaps are not used: they now return an
   "API key required" image to requests without a key. Both OSM servers have fair-use tile policies, so a
   public launch would need its own tile service.
 - **What leaves the browser**: map tile requests, and the coordinates of stations, depot, partner and
