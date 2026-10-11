@@ -177,6 +177,11 @@ export default function RoadMap({
     let errors = 0;
     let watchdog = 0;
     const tileLayer = L.tileLayer(TILES[0].url, TILES[0].options).addTo(m);
+    // Leaflet 1.9.4's redraw(), which setUrl calls, takes the map's fractional zoom (zoomSnap 0.25) as
+    // the tile zoom and asks for tiles like /13.25/x/y that no server has. Round it, as _setView does.
+    const grid = tileLayer as unknown as { _clampZoom(zoom: number): number };
+    const clampZoom = grid._clampZoom.bind(tileLayer);
+    grid._clampZoom = (zoom) => clampZoom(Math.round(zoom));
     const arm = () => {
       window.clearTimeout(watchdog);
       if (provider + 1 < TILES.length) watchdog = window.setTimeout(next, TILE_WAIT_MS);

@@ -122,6 +122,8 @@ export async function mockMapServices(page: Page, opts: MockOptions = {}) {
     calls.tiles++;
     const fallback = route.request().url().includes('openstreetmap.fr');
     if (fallback) calls.fallbackTiles++;
+    // Real tile servers only have whole zoom levels; anything else is a 404 page, which the browser blocks.
+    if (!/\/\d+\/\d+\/\d+\.png$/.test(new URL(route.request().url()).pathname)) return route.fulfill({ status: 404, contentType: 'text/html', body: 'Not found' });
     if (opts.tiles === 'hang' && !fallback) return new Promise<void>(() => {});
     const answers = opts.tiles === 'fallback' ? fallback : opts.tiles !== false;
     return answers ? route.fulfill({ status: 200, contentType: 'image/png', body: TILE }) : route.abort('connectionrefused');

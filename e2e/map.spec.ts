@@ -67,6 +67,9 @@ test('the base map falls back to OpenStreetMap France when the main tile server 
   const calls = await mockMapServices(page, { tiles: 'fallback' });
   await fresh(page, '#driver-map');
   await expect.poll(() => page.locator('.leaflet-tile-loaded').count()).toBeGreaterThan(3);
+  await page.getByRole('link', { name: 'Dẫn đường tới RE-003' }).click();
+  await page.getByRole('button', { name: 'Bắt đầu', exact: true }).waitFor();
+  await expect.poll(() => page.locator('.leaflet-tile-loaded').count()).toBeGreaterThan(3);
   expect(calls.fallbackTiles).toBeGreaterThan(0);
   await expect(page.getByText(/Không tải được bản đồ nền/)).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'OpenStreetMap France' })).toBeVisible();
