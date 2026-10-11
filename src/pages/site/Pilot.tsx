@@ -4,6 +4,7 @@ import { calculate, PRESETS, BASE_STATION, type CalcInput } from '../../domain/c
 import { NumberField, Switch, Badge } from '../../components/ui';
 import { Icon } from '../../components/icons';
 import { n0, n1, trd } from '../../lib/format';
+import { Breadcrumbs, SITE_WRAP } from './SiteLayout';
 
 type NumKey = { [K in keyof CalcInput]: CalcInput[K] extends number ? K : never }[keyof CalcInput];
 
@@ -29,19 +30,19 @@ export function PilotPage() {
   );
 
   return (
-    <div className="mx-auto flex max-w-content flex-col gap-6 px-4 pb-16 pt-8 sm:px-6 md:pt-12">
-      <div className="max-w-[70ch]">
-        <div className="eyebrow mb-2">Thí điểm và lộ trình</div>
-        <h1 className="text-2xl font-bold text-ink md:text-3xl">Kinh tế thí điểm: thử các giả định</h1>
-        <p className="mt-2 text-ink-2">{p.intro}</p>
+    <div className={`${SITE_WRAP} flex flex-col gap-5 pt-4`}>
+      <Breadcrumbs items={[['Trang chủ', '#home'], ['Thí điểm và lộ trình', null]]} />
+      <div className="shop-card p-5">
+        <h1 className="text-2xl font-medium text-shop-text md:text-[28px]">Kinh tế thí điểm: thử các giả định</h1>
+        <p className="mt-2 max-w-[80ch] text-sm text-shop-text">{p.intro}</p>
       </div>
-      <div className="grid gap-px overflow-hidden rounded-lg border border-line bg-line md:grid-cols-3">
+      <div className="grid gap-px overflow-hidden rounded-sm border border-shop-line bg-shop-line md:grid-cols-3">
         {[
           { k: 'Bán vật liệu', who: 'Nhà tái chế', v: 'Chai PET một dòng, đã cán dẹt; về sau là mảnh PET sạch từ trạm xử lý.' },
           { k: 'Dịch vụ truy xuất', who: 'Nhãn hàng có nghĩa vụ EPR', v: 'Bản ghi thu gom và hồ sơ lô để hỗ trợ báo cáo. Mức phí là giả định, chưa có hợp đồng.' },
           { k: 'Tài trợ trạm', who: 'Nhãn hàng, chủ địa điểm', v: 'Tài trợ đặt trạm và nội dung trên màn hình. Chưa có nhà tài trợ.' },
         ].map((r) => (
-          <div key={r.k} className="bg-panel p-4">
+          <div key={r.k} className="bg-white p-4">
             <div className="flex items-center justify-between gap-2">
               <h2 className="font-semibold text-ink">{r.k}</h2>
               <Badge tone="slate">Đề xuất</Badge>
@@ -57,7 +58,7 @@ export function PilotPage() {
           <button
             key={x.id}
             aria-pressed={preset === x.id}
-            className={`btn btn-sm ${preset === x.id ? 'bg-ink text-paper' : 'border border-line-strong bg-white text-ink hover:border-ink/50'}`}
+            className={`btn btn-sm rounded-full ${preset === x.id ? 'bg-shop-nav-2 text-white' : 'btn-shop-plain'}`}
             onClick={() => {
               setInp(x.input);
               setPreset(x.id);
@@ -70,15 +71,15 @@ export function PilotPage() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-4">
-          <fieldset className="card grid gap-3 p-4 sm:grid-cols-2">
-            <legend className="px-1 text-sm font-semibold text-ink">{p.volume}</legend>
+          <fieldset className="shop-card grid gap-3 p-4 sm:grid-cols-2">
+            <legend className="float-left w-full text-sm font-bold text-shop-text sm:col-span-2">{p.volume}</legend>
             {num('stations')}
             {num('bottlesPerStationDay')}
             {num('bottleMassG', 0.5)}
             {num('operatingDaysPerYear')}
           </fieldset>
-          <fieldset className="card grid gap-3 p-4 sm:grid-cols-2">
-            <legend className="px-1 text-sm font-semibold text-ink">{p.revenue}</legend>
+          <fieldset className="shop-card grid gap-3 p-4 sm:grid-cols-2">
+            <legend className="float-left w-full text-sm font-bold text-shop-text sm:col-span-2">{p.revenue}</legend>
             {num('materialPriceVndKg', 100)}
             <div className="flex flex-col gap-2 sm:col-span-2 sm:grid sm:grid-cols-2 sm:gap-3">
               <div className="flex flex-col gap-2">
@@ -91,16 +92,16 @@ export function PilotPage() {
               </div>
             </div>
           </fieldset>
-          <fieldset className="card grid gap-3 p-4 sm:grid-cols-2">
-            <legend className="px-1 text-sm font-semibold text-ink">{p.costs}</legend>
+          <fieldset className="shop-card grid gap-3 p-4 sm:grid-cols-2">
+            <legend className="float-left w-full text-sm font-bold text-shop-text sm:col-span-2">{p.costs}</legend>
             {num('investmentVndStation', 1000000)}
             {num('operatingVndStationYear', 100000)}
             {num('collectionVndKg', 100)}
             {num('rewardVndBottle', 5)}
             {num('networkFixedVndYear', 10000000)}
           </fieldset>
-          <fieldset className="card grid gap-3 p-4 sm:grid-cols-2">
-            <legend className="px-1 text-sm font-semibold text-ink">{p.basis}</legend>
+          <fieldset className="shop-card grid gap-3 p-4 sm:grid-cols-2">
+            <legend className="float-left w-full text-sm font-bold text-shop-text sm:col-span-2">{p.basis}</legend>
             {num('periodMonths')}
             <button type="button" className="btn btn-ghost self-end justify-self-start" onClick={() => (setInp(BASE_STATION), setPreset('one'))}>
               Khôi phục giả định cơ sở
@@ -109,7 +110,7 @@ export function PilotPage() {
         </div>
 
         <div className="flex min-w-0 flex-col gap-4">
-          <div className="card-raised sticky top-[60px] p-5">
+          <div className="shop-card sticky top-[60px] border border-shop-line p-5">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-lg font-semibold">Kết quả</h2>
               <Badge tone="slate" icon="sparkle">{t.common.projection}</Badge>
@@ -162,7 +163,7 @@ export function PilotPage() {
             <p className="mt-3 text-xs text-muted">{p.scope}</p>
           </div>
 
-          <div className="card p-5">
+          <div className="shop-card p-5">
             <h2 className="text-sm font-semibold">{p.integrationsTitle}</h2>
             <p className="mt-1 text-xs text-muted">{p.integrationsNote}</p>
             <ul className="mt-3 divide-y divide-line/70 text-[13px]">

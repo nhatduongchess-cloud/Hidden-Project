@@ -556,7 +556,25 @@ function useFocusTrap(open: boolean) {
   return ref;
 }
 
-export function Drawer({ open, onClose, title, children, footer, width = 480 }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; width?: number }) {
+export function Drawer({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+  width = 480,
+  side = 'right',
+  headerClassName = 'border-b border-line bg-panel',
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
+  width?: number;
+  side?: 'left' | 'right';
+  headerClassName?: string;
+}) {
   useEscape(open, onClose);
   const ref = useFocusTrap(open);
   const titleId = useId();
@@ -564,7 +582,7 @@ export function Drawer({ open, onClose, title, children, footer, width = 480 }: 
   // Rendered at the page root: a fixed parent (the navigation screen) would otherwise trap it below
   // that screen's sheet and the top bar.
   return createPortal(
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className={`fixed inset-0 z-50 flex ${side === 'left' ? 'justify-start' : 'justify-end'}`}>
       <div className="absolute inset-0 bg-ink/30" onClick={onClose} aria-hidden />
       <div
         ref={ref}
@@ -572,10 +590,10 @@ export function Drawer({ open, onClose, title, children, footer, width = 480 }: 
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="drawer-in relative flex h-full w-full flex-col bg-paper shadow-3"
+        className={`${side === 'left' ? 'drawer-in-left' : 'drawer-in'} relative flex h-full w-full flex-col bg-paper shadow-3`}
         style={{ maxWidth: width, paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
-        <div className="flex items-center justify-between gap-3 border-b border-line bg-panel px-5 py-3">
+        <div className={`flex items-center justify-between gap-3 px-5 py-3 ${headerClassName}`}>
           <h2 id={titleId} className="min-w-0 text-base font-semibold">
             {title}
           </h2>

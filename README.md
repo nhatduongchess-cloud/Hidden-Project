@@ -19,11 +19,17 @@ A dark bar at the top switches between them. **Đặt lại demo** restores the 
 
 | Experience | Start at | Built for | Screens |
 |---|---|---|---|
-| Website | `#home` | Public, desktop first | A Landing, H Station explorer (`#explorer`), pilot (`#pilot`) |
+| Website | `#home` | Public, desktop first | A Landing, H Station explorer (`#explorer`, or `#explorer-flatten` for one part), pilot (`#pilot`) |
 | Ứng dụng trả chai | `#app` | Students, 390 px first | B Home, C Return flow (`#app-return`), stations, history, rewards |
 | RE Hub | `#hub` | Operators and brands, 1440 px first | D Overview, E Station detail, F Routes, G Traceability, transactions, settings |
 | Tài xế | `#driver` | Collection driver, phone | F Route, current stop, bin-swap confirmation; nearest stations on a road map (`#driver-map`); turn-by-turn navigation (`#driver-nav-RE-003`) |
 | Hệ thống thiết kế | `#design` | Designers and developers | Tokens, contrast, type, components, states, responsive rules |
+
+The public website uses a store-style layout: a dark header with a scoped search (stations, station
+parts and pages, typed with or without Vietnamese marks), a "Tất cả" menu, white cards on a grey
+ground, yellow and orange pill buttons, and a product-page layout for the station. It keeps RE's own
+mark and name; there are no prices, ratings or reviews, and the header's bottle count and the
+"Trạm gần bạn" card read the same demo data as the app.
 
 All four read and write one record set kept in the browser. RE Hub only counts records a station has
 synced, so an offline station's deposits appear there only after reconnection.
@@ -35,15 +41,22 @@ Node 18 or later (tested on Node 22).
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 73 domain unit tests (Vitest)
+npm test             # 83 unit tests (Vitest)
 npm run build        # type-check + static site in dist/
 npm run preview      # serve dist/ on http://localhost:4173
-npm run test:e2e     # 20 Playwright browser tests against the production build (map services stubbed)
+npm run test:e2e     # 32 Playwright browser tests against the production build (map services stubbed)
 npm run build:single # one self-contained HTML file in dist-single/index.html
 ```
 
 No API keys, accounts or backend are needed. The road map needs internet access to the public map
 services listed below; without it the app falls back to a labelled straight-line estimate.
+
+## Published copy
+
+The current build is published with GitHub Pages from the `gh-pages` branch:
+https://nhatduongchess-cloud.github.io/Hidden-Project/ . To update it, run `npm run build` and push the
+contents of `dist/` (plus an empty `.nojekyll`) to `gh-pages`. `vite.config.ts` uses a relative base, so
+the same build works under that sub-path and at a domain root.
 
 ## Deploy on Vercel
 

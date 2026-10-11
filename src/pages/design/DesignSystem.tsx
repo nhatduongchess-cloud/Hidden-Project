@@ -119,6 +119,22 @@ const COLOR_GROUPS: { name: string; tokens: { key: string; rgb: string; role: st
       { key: 'route-ink', rgb: '16 70 156', role: 'Viền đường đi, chữ thời gian lái xe.' },
     ],
   },
+  {
+    name: 'Trang web kiểu cửa hàng',
+    tokens: [
+      { key: 'shop-nav', rgb: '19 25 33', role: 'Hàng đầu trang: logo, tìm kiếm, tài khoản; đáy chân trang.' },
+      { key: 'shop-nav-2', rgb: '35 47 62', role: 'Hàng điều hướng "Tất cả", nền ảnh lớn đầu trang, chân trang.' },
+      { key: 'shop-nav-3', rgb: '55 71 90', role: 'Dải "Lên đầu trang", dải khu vực trên điện thoại.' },
+      { key: 'shop-ground', rgb: '227 230 230', role: 'Nền xám của trang web; các thẻ trắng nằm trên nền này.' },
+      { key: 'shop-cta', rgb: '255 216 20', role: 'Nút hành động chính dạng viên thuốc, chữ nhấn trên nền tối.' },
+      { key: 'shop-cta-2', rgb: '255 164 28', role: 'Nút hành động thứ hai, số chai trên đầu trang, viền ô tìm kiếm khi chọn.' },
+      { key: 'shop-search', rgb: '254 189 105', role: 'Nút tìm kiếm.' },
+      { key: 'shop-link', rgb: '0 113 133', role: 'Liên kết trên thẻ trắng và đường dẫn.' },
+      { key: 'shop-text', rgb: '15 17 17', role: 'Chữ trên thẻ trắng và trên nút vàng, cam.' },
+      { key: 'shop-muted', rgb: '86 89 89', role: 'Chữ phụ trên thẻ trắng.' },
+      { key: 'shop-tile', rgb: '243 244 244', role: 'Ô biểu tượng trong thẻ trang chủ.' },
+    ],
+  },
 ];
 
 /* Ratios computed with the WCAG 2.x relative-luminance formula from the RGB values in index.css. */
@@ -168,6 +184,13 @@ const CONTRAST: Pair[] = [
   { fg: 'fault', bg: 'sunk', use: 'Thanh đo từ 95 %', ratio: 4.71, need: 3, kind: 'ui' },
   { fg: 'field', bg: 'white', use: 'Viền ô nhập', ratio: 3.54, need: 3, kind: 'ui' },
   { fg: 'field', bg: 'paper', use: 'Rãnh công tắc khi tắt', ratio: 3.19, need: 3, kind: 'ui' },
+  { fg: 'shop-text', bg: 'shop-cta', use: 'Nút vàng trên trang web', ratio: 13.61, need: 4.5, kind: 'text' },
+  { fg: 'shop-text', bg: 'shop-cta-2', use: 'Nút cam trên trang web', ratio: 9.54, need: 4.5, kind: 'text' },
+  { fg: 'shop-link', bg: 'white', use: 'Liên kết trên thẻ trắng', ratio: 5.67, need: 4.5, kind: 'text' },
+  { fg: 'shop-link', bg: 'shop-ground', use: 'Đường dẫn trên nền xám', ratio: 4.52, need: 4.5, kind: 'text' },
+  { fg: 'shop-muted', bg: 'white', use: 'Chữ phụ trên thẻ trắng', ratio: 7.07, need: 4.5, kind: 'text' },
+  { fg: 'white', bg: 'shop-nav-2', use: 'Chữ trên ảnh lớn và hàng điều hướng', ratio: 13.57, need: 4.5, kind: 'text' },
+  { fg: 'shop-cta', bg: 'shop-nav-2', use: 'Dòng nhấn vàng trong tiêu đề', ratio: 9.75, need: 4.5, kind: 'text' },
 ];
 
 const TYPE_SCALE: { name: string; cls: string; size: string; lh: string; weight: string; use: string }[] = [

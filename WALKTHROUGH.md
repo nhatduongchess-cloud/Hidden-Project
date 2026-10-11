@@ -6,8 +6,9 @@ Labels in bold are quoted as they appear on screen.
 
 **0:00 – 0:20 · The idea (Website)**
 "Trả chai PET. Nhận điểm. Theo dõi hành trình tái chế." Point at "Mô hình đề xuất · PCIC 2026" and the
-pilot section's "Đã có / Chưa có" split: the design exists, the physical prototype and network do not.
-Click **Trải nghiệm trả chai**.
+roadmap's "Đã có / Chưa có" split: the design exists, the physical prototype and network do not. Type
+"can det" in the header search to jump to the rollers in the station explorer, then go back and click
+**Trải nghiệm trả chai**.
 
 **0:20 – 1:05 · Return a bottle (Ứng dụng trả chai)**
 1. Click **Dùng trạm RE-001**, **Quét mã (mô phỏng)**, then **Đã đặt chai vào khe**. The station

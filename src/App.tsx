@@ -102,7 +102,7 @@ export function App() {
     case 'site':
       body = (
         <SiteLayout route={route}>
-          {route.name === 'explorer' ? <Explorer /> : route.name === 'pilot' ? <PilotPage /> : <Landing />}
+          {route.name === 'explorer' ? <Explorer key={route.param} part={route.param} /> : route.name === 'pilot' ? <PilotPage /> : <Landing />}
         </SiteLayout>
       );
       break;
