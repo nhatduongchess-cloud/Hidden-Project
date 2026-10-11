@@ -28,6 +28,11 @@ test('driver map and navigation on real streets', async ({ page }) => {
   if (process.env.LIVE_MOCK) await mockMapServices(page);
   page.on('requestfailed', (r) => failures.push(`${r.failure()?.errorText} ${r.url().slice(0, 100)}`));
 
+  await page.goto('./#home');
+  await page.getByRole('combobox', { name: 'Tìm trên RE' }).waitFor({ timeout: 60_000 });
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: `${OUT}/0-trang-chu.png` });
+
   await page.goto('./#driver-map');
   await page.getByText('Nhanh nhất từ vị trí xe').waitFor({ timeout: 60_000 });
   await tilesLoaded(page);
