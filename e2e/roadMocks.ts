@@ -109,8 +109,8 @@ export interface MockOptions {
   /** Which routing services answer. Those not listed fail, as when the network blocks them. */
   answer?: ('valhalla' | 'osrm')[];
   /**
-   * false: no tile server answers. 'fallback': the main server refuses and only the OpenStreetMap
-   * France fallback answers. 'hang': the main server never answers at all.
+   * false: no tile server answers. 'fallback': the first server (OpenStreetMap France) refuses and
+   * only the fallbacks answer. 'hang': the first server never answers at all.
    */
   tiles?: boolean | 'fallback' | 'hang';
 }
@@ -118,9 +118,9 @@ export interface MockOptions {
 export async function mockMapServices(page: Page, opts: MockOptions = {}) {
   const answer = opts.answer ?? ['valhalla'];
   const calls = { valhalla: 0, osrm: 0, tiles: 0, fallbackTiles: 0 };
-  await page.route(/tile\.openstreetmap\.(org|fr)/, (route) => {
+  await page.route(/tile\.openstreetmap\.(fr|org|de)\//, (route) => {
     calls.tiles++;
-    const fallback = route.request().url().includes('openstreetmap.fr');
+    const fallback = !route.request().url().includes('openstreetmap.fr');
     if (fallback) calls.fallbackTiles++;
     // Real tile servers only have whole zoom levels; anything else is a 404 page, which the browser blocks.
     if (!/\/\d+\/\d+\/\d+\.png$/.test(new URL(route.request().url()).pathname)) return route.fulfill({ status: 404, contentType: 'text/html', body: 'Not found' });

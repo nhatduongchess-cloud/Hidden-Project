@@ -64,17 +64,16 @@ export interface RoadMapProps {
 }
 
 /**
- * Keyless raster tiles from OpenStreetMap. CARTO's basemaps were dropped: they now answer every
- * request without an API key with an "API key required" image, which never triggers a fallback.
+ * Keyless raster tiles from OpenStreetMap community servers, tried in order. OpenStreetMap France
+ * comes first because Vietnamese ISPs' DNS resolves openstreetmap.org to 127.0.0.1 (seen on a home
+ * connection in TP.HCM, October 2026), so tile.openstreetmap.org never loads there. CARTO's
+ * basemaps were dropped: without an API key they answer with an "API key required" image, which
+ * never triggers a fallback.
  */
 /** How long the first tile may take before trying the next provider. */
 const TILE_WAIT_MS = 5000;
 const OSM = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
 const TILES: { url: string; options: L.TileLayerOptions }[] = [
-  {
-    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    options: { maxZoom: 19, attribution: OSM },
-  },
   {
     url: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
     options: {
@@ -83,7 +82,27 @@ const TILES: { url: string; options: L.TileLayerOptions }[] = [
       attribution: `${OSM} · nền <a href="https://www.openstreetmap.fr" target="_blank" rel="noopener">OpenStreetMap France</a>`,
     },
   },
+  {
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    options: { maxZoom: 19, attribution: OSM },
+  },
+  {
+    url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+    options: {
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      attribution: `${OSM} · nền <a href="https://www.openstreetmap.de" target="_blank" rel="noopener">OpenStreetMap Deutschland</a>`,
+    },
+  },
 ];
+
+/**
+ * The map stays at city scale over mainland Viet Nam: no zooming out past a region and no panning
+ * out to sea. Collection routes are a few kilometres, and a country-scale view would show the
+ * Hoàng Sa and Trường Sa archipelagos with labels from OpenStreetMap data, not from Viet Nam.
+ */
+const MIN_ZOOM = 10;
+const VIEW_BOUNDS = L.latLngBounds([8.0, 101.8], [23.6, 110.0]);
 
 const NO_PAD: Padding = { top: 0, right: 0, bottom: 0, left: 0 };
 
@@ -166,7 +185,17 @@ export default function RoadMap({
   // Create the map once.
   useEffect(() => {
     if (!el.current) return;
-    const m = L.map(el.current, { zoomControl: false, attributionControl: false, center: [10.875, 106.8], zoom: 14, zoomSnap: 0.25 });
+    const start = zone ?? markers[0] ?? { lat: 10.875, lng: 106.8 };
+    const m = L.map(el.current, {
+      zoomControl: false,
+      attributionControl: false,
+      center: [start.lat, start.lng],
+      zoom: 14,
+      zoomSnap: 0.25,
+      minZoom: MIN_ZOOM,
+      maxBounds: VIEW_BOUNDS,
+      maxBoundsViscosity: 1,
+    });
     const attribution = L.control.attribution({ prefix: '<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>' }).addTo(m).addAttribution(ROUTING_ATTRIBUTION);
     if (zoomControl) L.control.zoom({ position: 'topright', zoomInTitle: 'Phóng to', zoomOutTitle: 'Thu nhỏ' }).addTo(m);
     // Base tiles, falling back to the next provider if the first never loads a tile: after four tile
@@ -198,6 +227,7 @@ export default function RoadMap({
       const t = TILES[provider];
       tileLayer.options.subdomains = t.options.subdomains ?? 'abc';
       tileLayer.options.maxZoom = t.options.maxZoom;
+      tileLayer.options.maxNativeZoom = t.options.maxNativeZoom;
       tileLayer.getAttribution = () => t.options.attribution ?? '';
       attribution.removeAttribution(TILES[provider - 1].options.attribution ?? '').addAttribution(t.options.attribution ?? '');
       tileLayer.setUrl(t.url);

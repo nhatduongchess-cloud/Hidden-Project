@@ -437,7 +437,7 @@ export function Navigation({ targetId }: { targetId: string }) {
         lines={lines}
         zone={mode === 'overview' ? state.settings.zone : null}
         padding={pad}
-        fitKey={mode === 'overview' ? `${roadRoute ? roadRoute.distanceM : '-'}|${wide}|${Math.round(sheetH / 40)}` : undefined}
+        fitKey={mode === 'overview' ? `${state.settings.areaId}|${roadRoute ? roadRoute.distanceM : '-'}|${wide}|${Math.round(sheetH / 40)}` : undefined}
         fitPoints={roadRoute ? roadRoute.geometry : [origin, dest]}
         follow={following ? truck.point : null}
         followZoom={17}

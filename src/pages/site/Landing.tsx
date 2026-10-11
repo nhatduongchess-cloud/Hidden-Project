@@ -13,6 +13,8 @@ import { DEMO_DISTANCE_M } from '../../domain/constants';
 import { availability, AVAIL, sortedStations } from '../app/screens';
 import { ZONE_INFO } from './zones';
 import { SITE_WRAP } from './SiteLayout';
+import { areaById } from '../../domain/areas';
+import { useOpenAreaPicker } from './AreaPicker';
 
 const SPECS: [string, string][] = [
   ['Kích thước bao', '800 × 800 × 1.800 mm'],
@@ -231,27 +233,37 @@ function IconQuad({ items }: { items: { icon: IconName; label: string }[] }) {
 
 function NearbyStations() {
   const state = useAppState();
+  const openArea = useOpenAreaPicker();
   return (
-    <ul className="flex flex-col divide-y divide-shop-line">
-      {sortedStations(state).map((st) => {
-        const a = availability(state, st);
-        const pct = fillPct(state, st, 'hub');
-        return (
-          <li key={st.id} className="flex flex-col gap-1.5 py-2.5 first:pt-0">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="min-w-0 truncate text-sm">
-                <span className="id-tag font-semibold">{st.id}</span> · {st.name}
-              </span>
-              <span className="tnum shrink-0 text-xs text-shop-muted">{DEMO_DISTANCE_M[st.id] ?? '–'} m</span>
-            </div>
-            <Badge tone={AVAIL[a].tone} icon={AVAIL[a].icon} className="self-start">
-              {AVAIL[a].label}
-            </Badge>
-            <FillMeter pct={pct} stale={a === 'unknown'} size="sm" label={`Mức đầy ${st.id}`} />
-          </li>
-        );
-      })}
-    </ul>
+    <>
+      <p className="mb-2 flex items-center gap-1.5 text-sm text-shop-muted">
+        <Icon name="mapPin" size={15} className="shrink-0" />
+        <span className="min-w-0 truncate">{areaById(state.settings.areaId).city} · minh họa</span>
+        <button type="button" onClick={openArea} className="shop-link shrink-0 text-[13px]" aria-haspopup="dialog">
+          Đổi khu vực
+        </button>
+      </p>
+      <ul className="flex flex-col divide-y divide-shop-line">
+        {sortedStations(state).map((st) => {
+          const a = availability(state, st);
+          const pct = fillPct(state, st, 'hub');
+          return (
+            <li key={st.id} className="flex flex-col gap-1.5 py-2.5 first:pt-0">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="min-w-0 truncate text-sm">
+                  <span className="id-tag font-semibold">{st.id}</span> · {st.name}
+                </span>
+                <span className="tnum shrink-0 text-xs text-shop-muted">{DEMO_DISTANCE_M[st.id] ?? '–'} m</span>
+              </div>
+              <Badge tone={AVAIL[a].tone} icon={AVAIL[a].icon} className="self-start">
+                {AVAIL[a].label}
+              </Badge>
+              <FillMeter pct={pct} stale={a === 'unknown'} size="sm" label={`Mức đầy ${st.id}`} />
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }
 

@@ -41,7 +41,7 @@ export function RouteRoadMap({
         markers={markers}
         lines={lines}
         zone={state.settings.zone}
-        fitKey={`${order.join('>')}|${planned.value ? 'r' : '-'}`}
+        fitKey={`${state.settings.areaId}|${order.join('>')}|${planned.value ? 'r' : '-'}`}
         fitPoints={planned.value?.geometry}
       />
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-2">

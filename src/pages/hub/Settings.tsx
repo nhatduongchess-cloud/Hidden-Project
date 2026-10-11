@@ -8,6 +8,8 @@ import { PageHeader, Panel } from './shared';
 import { RoadMap } from '../../components/LazyRoadMap';
 import { collectTargets } from '../../domain/places';
 import { placeMarkers } from '../driver/shared';
+import { AreaSelect } from '../../components/AreaSelect';
+import { areaById } from '../../domain/areas';
 
 const INTEGRATIONS: { name: string; icon: IconName; now: string; later: string }[] = [
   { name: 'Dữ liệu từ trạm', icon: 'station', now: 'Mô phỏng trong trình duyệt', later: 'Trạm gửi qua 4G, ghi tạm khi mất mạng' },
@@ -207,6 +209,7 @@ function MapPlaces() {
   const state = useAppState();
   const store = useStore();
   const { zone, depot, partner } = state.settings;
+  const area = areaById(state.settings.areaId);
   const [reset, setReset] = useState(false);
   const move = (target: string, lat: number, lng: number) => store.dispatch({ type: 'SET_LOCATION', target, lat, lng });
   const rows: { id: string; label: string; sub: string; lat: number; lng: number }[] = [
@@ -224,16 +227,19 @@ function MapPlaces() {
         </Button>
       }
     >
-      <p className="max-w-[75ch] text-sm text-ink-2">
-        Vị trí mặc định là điểm minh họa ở khu vực Thủ Đức, TP.HCM, chưa phải địa điểm thí điểm. Kéo ghim trên bản đồ hoặc nhập tọa độ. Thay đổi áp dụng ngay cho tuyến thu gom và màn hình tài xế.
-      </p>
+      <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+        <AreaSelect id="hub-area" className="w-full max-w-[20rem]" />
+        <p className="max-w-[62ch] flex-1 basis-[24rem] text-sm text-ink-2">
+          Mỗi khu vực đặt ba trạm quanh một khu đại học, cùng bãi xe và điểm tiếp nhận trong thành phố. Đây là điểm minh họa, chưa phải địa điểm thí điểm. Kéo ghim trên bản đồ hoặc nhập tọa độ; thay đổi áp dụng ngay cho tuyến thu gom và màn hình tài xế.
+        </p>
+      </div>
       <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <RoadMap
           className="h-[380px] rounded border border-line"
           label="Bản đồ chỉnh vị trí trạm, bãi xe, điểm tiếp nhận và phạm vi thu gom. Ghim kéo được; tọa độ cũng nhập được trong bảng bên cạnh."
           markers={placeMarkers(state, collectTargets(state), { draggable: true })}
           zone={zone}
-          fitKey="settings"
+          fitKey={`settings|${area.id}`}
           onMarkerDrag={(id, p) => {
             move(id, p.lat, p.lng);
             toast(`Đã đặt lại vị trí ${id === 'DEPOT' ? 'bãi xe' : id === 'PARTNER' ? 'điểm tiếp nhận' : id}.`);
@@ -295,7 +301,7 @@ function MapPlaces() {
           </>
         }
       >
-        Vị trí ba trạm, bãi xe, điểm tiếp nhận và phạm vi thu gom trở về điểm minh họa ban đầu. Xe được đưa về bãi.
+        Vị trí ba trạm, bãi xe, điểm tiếp nhận và phạm vi thu gom trở về điểm minh họa ban đầu của khu vực {area.city}. Xe được đưa về bãi.
       </Dialog>
     </Panel>
   );

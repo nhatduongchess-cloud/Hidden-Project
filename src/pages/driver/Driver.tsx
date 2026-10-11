@@ -160,7 +160,7 @@ export function DriverExperience() {
             markers={placeMarkers(state, collectTargets(state), { order: Object.fromEntries(stops.map((s, i) => [s.stationId, i + 1])) })}
             lines={planned.value ? [{ id: 'planned', kind: planned.value.provider === 'estimate' ? 'estimate' : 'route', points: planned.value.geometry }] : []}
             zone={state.settings.zone}
-            fitKey={planned.value ? `r${planned.value.distanceM}` : 'pts'}
+            fitKey={`${state.settings.areaId}|${planned.value ? `r${planned.value.distanceM}` : 'pts'}`}
             fitPoints={planned.value?.geometry ?? plannedPts ?? undefined}
           />
         </div>

@@ -3,13 +3,20 @@ import { useAppState, useStore } from '../../lib/store-context';
 import { useT } from '../../i18n';
 import { activeRoute } from '../../domain/ops';
 import { collectTargets, rankNearest, truckLabel, truckPos, type Ranked } from '../../domain/places';
-import { bearingDeg, fmtDistanceVi, fmtDurationVi } from '../../domain/geo';
+import { bearingDeg, fmtDistanceVi, fmtDurationVi, haversineM } from '../../domain/geo';
+import { areaById, nearestArea } from '../../domain/areas';
+import { AreaSelect } from '../../components/AreaSelect';
 import { useMatrix, useRoadRoute } from '../../lib/roadHooks';
 import { Icon } from '../../components/icons';
 import { Alert, Button, EmptyState, Skeleton, StaleTag, toast } from '../../components/ui';
 import { RoadMap, type MapLine, type MapMarker } from '../../components/LazyRoadMap';
 import { ClassBadge, DriverShell, ProviderNote, placeMarkers } from './shared';
 import { n0 } from '../../lib/format';
+
+/** Beyond this the truck is clearly not working the demo area. */
+const FAR_FROM_ZONE_M = 30_000;
+/** A GPS position this close to another area's centre offers to switch to it. */
+const NEAR_AREA_KM = 40;
 
 /**
  * "Trạm cần thu gom gần nhất": every station that needs a pickup inside the collection zone,
@@ -35,6 +42,11 @@ export function DriverMap() {
   const preview = useRoadRoute(selected ? [origin, { lat: selected.lat, lng: selected.lng }] : null);
   const nextPlanned = route?.stops.find((s) => s.status === 'pending');
   const [locating, setLocating] = useState(false);
+  const area = areaById(state.settings.areaId);
+  // A GPS position far from the collection zone, e.g. a phone in another city than the demo area.
+  const awayM = state.driverPos ? haversineM(state.driverPos, state.settings.zone) : 0;
+  const near = awayM > FAR_FROM_ZONE_M ? nearestArea(state.driverPos!) : null;
+  const switchTo = near && near.km < NEAR_AREA_KM && near.area.id !== area.id ? near.area : null;
 
   const markers: MapMarker[] = [
     ...placeMarkers(state, targets, { selected: selectedId ?? undefined }),
@@ -81,6 +93,8 @@ export function DriverMap() {
       <h1 className="text-xl font-semibold text-ink">Trạm cần thu gom gần nhất</h1>
       <p className="mt-0.5 text-sm text-ink-2">Xếp theo thời gian lái xe từ vị trí xe, trong phạm vi thu gom.</p>
 
+      <AreaSelect id="driver-area" className="mt-3 max-w-[20rem]" />
+
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded border border-line bg-panel px-3 py-2">
         <span className="flex min-w-0 items-center gap-2 text-sm">
           <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-route text-white" aria-hidden>
@@ -102,6 +116,35 @@ export function DriverMap() {
           )}
         </span>
       </div>
+
+      {near && (
+        <Alert
+          tone="warn"
+          icon="mapPin"
+          className="mt-3"
+          title={`Xe đang cách phạm vi thu gom ${fmtDistanceVi(awayM)}`}
+          actions={
+            switchTo && (
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => {
+                  store.dispatch({ type: 'APPLY_AREA', areaId: switchTo.id, keepDriverPos: true });
+                  toast(`Đã chuyển trạm minh họa tới ${switchTo.city}.`);
+                }}
+              >
+                Chuyển sang {switchTo.city}
+              </Button>
+            )
+          }
+        >
+          {switchTo
+            ? `Vị trí GPS ở gần khu vực minh họa ${switchTo.city}. Các trạm đang ở ${area.city}.`
+            : near.area.id === area.id
+              ? `Các trạm ở ${area.city}. Bấm “Về bãi xe” để xem tuyến từ bãi.`
+              : `Chưa có khu vực minh họa gần vị trí GPS này. Các trạm đang ở ${area.city}; bấm “Về bãi xe” để xem tuyến từ bãi.`}
+        </Alert>
+      )}
 
       <div className="-mx-4 mt-3 sm:mx-0">
         <RoadMap

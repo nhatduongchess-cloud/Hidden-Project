@@ -30,6 +30,9 @@ test('nearest station by driving time → turn-by-turn → swap the bin on arriv
   await expect(page.getByText(/Đường thực tế · Valhalla/).first()).toBeVisible();
   await expect(page.getByRole('region', { name: /Bản đồ trạm thu gom/ })).toBeVisible();
   expect(calls.tiles).toBeGreaterThan(0);
+  // OpenStreetMap France first: openstreetmap.org is blocked by Vietnamese ISPs' DNS.
+  expect(calls.fallbackTiles).toBe(0);
+  await expect(page.getByRole('link', { name: 'OpenStreetMap France' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Dẫn đường tới RE-003' }).click();
   await expect(page.getByRole('heading', { name: 'RE-003 · Thư viện trung tâm' })).toBeVisible();
@@ -81,7 +84,7 @@ test('falls back to OSRM when Valhalla does not answer, and says so', async ({ p
   await expect(page.getByText(/Valhalla · OpenStreetMap không phản hồi/)).toBeVisible();
 });
 
-test('the base map falls back to OpenStreetMap France when the main tile server is unreachable', async ({ page }) => {
+test('the base map falls back to the next tile server when OpenStreetMap France is unreachable', async ({ page }) => {
   const calls = await mockMapServices(page, { tiles: 'fallback' });
   await fresh(page, '#driver-map');
   await expect.poll(() => page.locator('.leaflet-tile-loaded').count()).toBeGreaterThan(3);
@@ -90,7 +93,8 @@ test('the base map falls back to OpenStreetMap France when the main tile server 
   await expect.poll(() => page.locator('.leaflet-tile-loaded').count()).toBeGreaterThan(3);
   expect(calls.fallbackTiles).toBeGreaterThan(0);
   await expect(page.getByText(/Không tải được bản đồ nền/)).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'OpenStreetMap France' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'OpenStreetMap France' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'OpenStreetMap', exact: true }).first()).toBeVisible();
 });
 
 test('the base map also falls back when the main tile server hangs instead of failing', async ({ page }) => {

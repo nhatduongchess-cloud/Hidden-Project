@@ -1,7 +1,8 @@
 import type { AppState, Transaction, Settings, Station, Evidence, Batch, CollectionRecord, WorkOrder, AssignedRoute } from './types';
 import { fillPct } from './selectors';
 import { newId } from './ids';
-import { DEFAULT_SETTINGS, DEFAULT_STATION_LOCATIONS } from './constants';
+import { DEFAULT_SETTINGS } from './constants';
+import { AREAS, areaById, type ServiceArea } from './areas';
 
 export type Action =
   | { type: 'COMMIT_ACCEPTED'; tx: Transaction }
@@ -32,6 +33,8 @@ export type Action =
   /** Where the collection truck is (last stop, GPS fix or simulated drive). */
   | { type: 'SET_DRIVER_POS'; pos: { lat: number; lng: number } | null }
   | { type: 'RESET_LOCATIONS' }
+  /** Move the stations, depot, receiving point and zone to another illustrative city. */
+  | { type: 'APPLY_AREA'; areaId: string; keepDriverPos?: boolean }
   | { type: 'REPLACE_STATE'; state: AppState };
 
 const MAX_LOG = 60;
@@ -357,15 +360,30 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, driverPos: action.pos };
     }
     case 'RESET_LOCATIONS':
-      return {
-        ...state,
-        stations: state.stations.map((st) => (DEFAULT_STATION_LOCATIONS[st.id] ? { ...st, ...DEFAULT_STATION_LOCATIONS[st.id] } : st)),
-        settings: { ...state.settings, depot: DEFAULT_SETTINGS.depot, partner: DEFAULT_SETTINGS.partner, zone: DEFAULT_SETTINGS.zone },
-        driverPos: null,
-      };
+      return placeArea(state, areaById(state.settings.areaId), false);
+    case 'APPLY_AREA': {
+      const area = AREAS.find((a) => a.id === action.areaId);
+      return area ? placeArea(state, area, !!action.keepDriverPos) : state;
+    }
     case 'REPLACE_STATE':
       return action.state;
   }
+}
+
+/** Every place on the map at an area's illustrative points. The truck goes back to the depot unless kept. */
+function placeArea(s: AppState, area: ServiceArea, keepDriverPos: boolean): AppState {
+  return {
+    ...s,
+    stations: s.stations.map((st) => (area.stations[st.id] ? { ...st, ...area.stations[st.id] } : st)),
+    settings: {
+      ...s.settings,
+      areaId: area.id,
+      depot: { ...area.depot, name: DEFAULT_SETTINGS.depot.name },
+      partner: { ...area.partner, name: DEFAULT_SETTINGS.partner.name },
+      zone: { ...area.zone },
+    },
+    driverPos: keepDriverPos ? s.driverPos : null,
+  };
 }
 
 function mapRoute(s: AppState, id: string, fn: (r: AssignedRoute) => AssignedRoute): AppState {

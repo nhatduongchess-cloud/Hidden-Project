@@ -7,7 +7,9 @@ Labels in bold are quoted as they appear on screen.
 **0:00 – 0:20 · The idea (Website)**
 "Trả chai PET. Nhận điểm. Theo dõi hành trình tái chế." Point at "Mô hình đề xuất · PCIC 2026" and the
 roadmap's "Đã có / Chưa có" split: the design exists, the physical prototype and network do not. Type
-"can det" in the header search to jump to the rollers in the station explorer, then go back and click
+"can det" in the header search to jump to the rollers in the station explorer, then go back. To demo in
+another city, click **Trạm gần bạn** in the header and pick it (Hà Nội, Đà Nẵng, Cần Thơ…): the three
+stations, depot and receiving point move there, and the map, routes and navigation follow. Then click
 **Trải nghiệm trả chai**.
 
 **0:20 – 1:05 · Return a bottle (Ứng dụng trả chai)**

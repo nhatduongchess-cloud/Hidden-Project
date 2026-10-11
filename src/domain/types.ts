@@ -130,6 +130,8 @@ export interface Settings {
   stopPct: number;
   confidenceThresholdPct: number;
   liquidToleranceG: number;
+  /** Illustrative service area the map shows (areas.ts). Missing in state saved before areas: TP.HCM. */
+  areaId?: string;
   /** Where collection trucks start (illustrative). */
   depot: Place;
   /** Where full bins are delivered (illustrative). */

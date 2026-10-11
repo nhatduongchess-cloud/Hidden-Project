@@ -41,10 +41,10 @@ Node 18 or later (tested on Node 22).
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 83 unit tests (Vitest)
+npm test             # 91 unit tests (Vitest)
 npm run build        # type-check + static site in dist/
 npm run preview      # serve dist/ on http://localhost:4173
-npm run test:e2e     # 32 Playwright browser tests against the production build (map services stubbed)
+npm run test:e2e     # 36 Playwright browser tests against the production build (map services stubbed)
 npm run build:single # one self-contained HTML file in dist-single/index.html
 ```
 
@@ -111,7 +111,7 @@ e2e/           Playwright critical paths
 | Station events | Demo control panel | `TelemetrySource` (4G upload, idempotent by record id) |
 | Bottle recognition | Rule-based fusion of chosen camera class, confidence, barcode, weight | On-station model and barcode catalogue |
 | Fill level | Accepted mass ÷ bin volume × compacted-PET density | Two ultrasonic sensors |
-| Map | OpenStreetMap tiles (openstreetmap.org, then OpenStreetMap France); illustrative station coordinates, editable in RE Hub → Cài đặt. RE Hub's overview keeps a campus schematic | Real station locations after a site survey |
+| Map | OpenStreetMap community tiles (OpenStreetMap France, then openstreetmap.org, then OpenStreetMap Deutschland); illustrative station coordinates in 10 cities, editable in RE Hub → Cài đặt. RE Hub's overview keeps a campus schematic | Real station locations after a site survey |
 | Routing | Real road routing from public Valhalla (truck) / OSRM (car) demo servers; straight-line estimate if both fail. No traffic or time-of-day truck bans | A self-hosted Valhalla/OSRM server; a CVRPTW solver for larger fleets |
 | Truck position | Simulated driving along the route, or the phone's GPS when the driver allows it | Vehicle telematics |
 | Data | Browser localStorage | `DataRepository` |
@@ -144,15 +144,29 @@ zone, with a phone-navigation interface, and RE Hub plans the best visiting orde
   `router.project-osrm.org` (car profile), then a straight line × 1.35 at 20 km/h. Every time, line
   and list says which one produced it. Both servers are free community demos with fair-use limits; a
   pilot would self-host one on the same OpenStreetMap data.
-- **Base map**: OpenStreetMap's own tiles (`tile.openstreetmap.org`), then OpenStreetMap France if they
-  fail or stay silent for 5 s, then a notice that the base map could not load. CARTO's basemaps are not used: they now return an
-  "API key required" image to requests without a key. Both OSM servers have fair-use tile policies, so a
-  public launch would need its own tile service.
+- **Base map**: OpenStreetMap France (`tile.openstreetmap.fr`) first, then OpenStreetMap's own tiles
+  (`tile.openstreetmap.org`), then OpenStreetMap Deutschland (`tile.openstreetmap.de`), each tried when the
+  one before fails or stays silent for 5 s, then a notice that the base map could not load. France comes
+  first because Vietnamese ISPs' DNS answers `127.0.0.1` for `openstreetmap.org` (seen on a home line in
+  TP.HCM in October 2026; public DNS such as 1.1.1.1 resolves it normally), so `.org` tiles never load for
+  most people in Viet Nam. CARTO's basemaps are not used: they return an "API key required" image to
+  requests without a key. All three servers have fair-use tile policies, so a public launch would need its
+  own tile service.
+- **City scale only**: maps open at street level and cannot zoom out past zoom 10 or pan beyond mainland
+  Viet Nam. A country-wide view would show the Hoàng Sa and Trường Sa archipelagos with whatever labels
+  OpenStreetMap data carries, which the prototype does not control.
 - **What leaves the browser**: map tile requests, and the coordinates of stations, depot, partner and
   truck sent to the routing servers. No transactions, users or station readings.
-- **Not modelled**: live traffic, time-of-day truck bans in Ho Chi Minh City, parking at the station.
-- **Locations**: the three stations, depot, partner and zone are illustrative points in Thủ Đức, not a
-  chosen pilot site. Drag them or type coordinates in RE Hub → Cài đặt → Vị trí trên bản đồ.
+- **Not modelled**: live traffic, time-of-day truck bans in city centres, parking at the station.
+- **Locations across Viet Nam**: "Trạm gần bạn" in the website header (or the "Khu vực minh họa" menu on
+  the driver map and in RE Hub → Cài đặt) moves the three stations, depot, receiving point and zone to one
+  of 10 cities: Hà Nội, Hải Phòng, Vinh, Huế, Đà Nẵng, Quy Nhơn, Nha Trang, Đà Lạt, TP. Hồ Chí Minh
+  (the default, near Thủ Đức) and Cần Thơ. In each, the stations sit on one university campus and the
+  depot and receiving point are elsewhere in the city; points were found with Photon, snapped to roads a
+  2.8 t truck may use and checked to have a Valhalla truck route (`src/domain/areas.ts`). None is a chosen
+  pilot site, and the site names only the city. Drag pins or type coordinates in RE Hub → Cài đặt → Vị
+  trí trên bản đồ; "Đặt lại vị trí mặc định" returns to the chosen city's points. When the phone's GPS
+  puts the truck more than 30 km from the zone, the driver map offers to switch to the nearest city.
 
 Browser tests replace the tile and routing servers with local stand-ins (`e2e/roadMocks.ts`), including
 tests where Valhalla or both services fail. `SCREENS=<folder> npx playwright test screens` captures
@@ -162,6 +176,6 @@ To check the real services, run `npm run build`, then `LIVE=<folder> npm run tes
 reach them (in PowerShell: `$env:LIVE="live-run"; $env:PW_CHANNEL="msedge"; npm run test:live`). It drives the
 driver map, navigation to the fastest station, arrival and the RE Hub plan with no mocks, and saves
 screenshots, a video and `summary.json` (which routing service answered, the ranking and the steps).
-The video needs Playwright's ffmpeg (`npx playwright install ffmpeg`); set `LIVE_VIDEO=0` to skip it. Set `BASE_URL` to the published address to run the same check against a deployed copy.
+The video needs Playwright's ffmpeg (`npx playwright install ffmpeg`); set `LIVE_VIDEO=0` to skip it. Set `BASE_URL` to the published address to run the same check against a deployed copy, and `LIVE_AREA=hn,dn,ct` to run it once per city (output in `<folder>/<city id>`; add `--workers=1` to go easy on the free routing server). `summary.json` also lists which tile servers answered.
 
 See `WALKTHROUGH.md` for a three-minute demo script.
