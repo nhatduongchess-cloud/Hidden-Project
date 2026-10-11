@@ -6,7 +6,8 @@ import { mockMapServices } from './roadMocks';
  * A run against the real public map services (OpenStreetMap tiles, Valhalla, OSRM), with no mocks.
  * Skipped unless LIVE is set to an output folder for screenshots, a video and a summary:
  *   LIVE=./live-run npx playwright test live
- * Add PW_CHANNEL=msedge (or chrome) to use an installed browser instead of Playwright's own.
+ * Add PW_CHANNEL=msedge (or chrome) to use an installed browser instead of Playwright's own, and
+ * BASE_URL=https://…/ to check a deployed copy instead of the local build.
  * Needs a network that can reach those services. LIVE_MOCK=1 rehearses the script on the test mocks.
  */
 const OUT = process.env.LIVE;
@@ -27,7 +28,7 @@ test('driver map and navigation on real streets', async ({ page }) => {
   if (process.env.LIVE_MOCK) await mockMapServices(page);
   page.on('requestfailed', (r) => failures.push(`${r.failure()?.errorText} ${r.url().slice(0, 100)}`));
 
-  await page.goto('/#driver-map');
+  await page.goto('./#driver-map');
   await page.getByText('Nhanh nhất từ vị trí xe').waitFor({ timeout: 60_000 });
   await tilesLoaded(page);
   const provider = page.getByText(/^Đường thực tế ·|^Ước tính đường thẳng/).first();
@@ -64,7 +65,7 @@ test('driver map and navigation on real streets', async ({ page }) => {
   await page.waitForTimeout(800);
   await page.screenshot({ path: `${OUT}/6-da-den-noi.png` });
 
-  await page.goto('/#hub-routes');
+  await page.goto('./#hub-routes');
   await page.getByText(/Tuyến khả thi/).waitFor({ timeout: 60_000 });
   await page.waitForTimeout(4000);
   await page.setViewportSize({ width: 1440, height: 900 });
