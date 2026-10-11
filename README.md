@@ -38,7 +38,7 @@ npm run dev          # http://localhost:5173
 npm test             # 73 domain unit tests (Vitest)
 npm run build        # type-check + static site in dist/
 npm run preview      # serve dist/ on http://localhost:4173
-npm run test:e2e     # 17 Playwright browser tests against the production build (map services stubbed)
+npm run test:e2e     # 18 Playwright browser tests against the production build (map services stubbed)
 npm run build:single # one self-contained HTML file in dist-single/index.html
 ```
 
@@ -98,7 +98,7 @@ e2e/           Playwright critical paths
 | Station events | Demo control panel | `TelemetrySource` (4G upload, idempotent by record id) |
 | Bottle recognition | Rule-based fusion of chosen camera class, confidence, barcode, weight | On-station model and barcode catalogue |
 | Fill level | Accepted mass ÷ bin volume × compacted-PET density | Two ultrasonic sensors |
-| Map | OpenStreetMap tiles (CARTO, then openstreetmap.org); illustrative station coordinates, editable in RE Hub → Cài đặt. RE Hub's overview keeps a campus schematic | Real station locations after a site survey |
+| Map | OpenStreetMap tiles (openstreetmap.org, then OpenStreetMap France); illustrative station coordinates, editable in RE Hub → Cài đặt. RE Hub's overview keeps a campus schematic | Real station locations after a site survey |
 | Routing | Real road routing from public Valhalla (truck) / OSRM (car) demo servers; straight-line estimate if both fail. No traffic or time-of-day truck bans | A self-hosted Valhalla/OSRM server; a CVRPTW solver for larger fleets |
 | Truck position | Simulated driving along the route, or the phone's GPS when the driver allows it | Vehicle telematics |
 | Data | Browser localStorage | `DataRepository` |
@@ -131,6 +131,10 @@ zone, with a phone-navigation interface, and RE Hub plans the best visiting orde
   `router.project-osrm.org` (car profile), then a straight line × 1.35 at 20 km/h. Every time, line
   and list says which one produced it. Both servers are free community demos with fair-use limits; a
   pilot would self-host one on the same OpenStreetMap data.
+- **Base map**: OpenStreetMap's own tiles (`tile.openstreetmap.org`), then OpenStreetMap France if they
+  fail, then a notice that the base map could not load. CARTO's basemaps are not used: they now return an
+  "API key required" image to requests without a key. Both OSM servers have fair-use tile policies, so a
+  public launch would need its own tile service.
 - **What leaves the browser**: map tile requests, and the coordinates of stations, depot, partner and
   truck sent to the routing servers. No transactions, users or station readings.
 - **Not modelled**: live traffic, time-of-day truck bans in Ho Chi Minh City, parking at the station.

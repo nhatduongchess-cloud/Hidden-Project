@@ -13,7 +13,7 @@ const INTEGRATIONS: { name: string; icon: IconName; now: string; later: string }
   { name: 'Dữ liệu từ trạm', icon: 'station', now: 'Mô phỏng trong trình duyệt', later: 'Trạm gửi qua 4G, ghi tạm khi mất mạng' },
   { name: 'Lưu trữ', icon: 'layers', now: 'Bộ nhớ trình duyệt này', later: 'Cơ sở dữ liệu có phân quyền theo vai trò' },
   { name: 'Lập tuyến', icon: 'route', now: 'Thời gian lái xe từ Valhalla/OSRM (máy chủ OSM công cộng); dự phòng đường thẳng', later: 'Máy chủ định tuyến riêng, giờ cấm tải và kẹt xe theo giờ' },
-  { name: 'Bản đồ', icon: 'map', now: 'Bản đồ nền OpenStreetMap/CARTO; vị trí trạm minh họa', later: 'Vị trí trạm thật sau khảo sát thí điểm' },
+  { name: 'Bản đồ', icon: 'map', now: 'Bản đồ nền OpenStreetMap (máy chủ OSM, dự phòng OSM France); vị trí trạm minh họa', later: 'Vị trí trạm thật sau khảo sát thí điểm' },
   { name: 'Đổi điểm', icon: 'gift', now: 'Chưa có', later: 'Đối tác ưu đãi, chưa thỏa thuận' },
   { name: 'Bên tái chế', icon: 'building', now: 'Tài liệu do người vận hành đính kèm', later: 'Nhận phiếu cân và chứng từ trực tiếp' },
 ];

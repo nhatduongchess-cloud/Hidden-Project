@@ -29,7 +29,7 @@ export interface RoutingProvider {
   plan(stations: PlanStationInput[], cfg: PlanConfig): Promise<PlanResult>;
 }
 
-/** Map tiles and geocoding. Demo: OpenStreetMap/CARTO tiles with illustrative station coordinates; no geocoding. */
+/** Map tiles and geocoding. Demo: OpenStreetMap tiles (openstreetmap.org, then OpenStreetMap France) with illustrative station coordinates; no geocoding. */
 export interface MapProvider {
   status(): IntegrationStatus;
 }

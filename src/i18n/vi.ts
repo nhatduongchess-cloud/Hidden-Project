@@ -573,7 +573,7 @@ export const vi = {
       integrations: [
         ['Cơ sở dữ liệu (Supabase)', 'Chưa kết nối · đang dùng lưu trữ cục bộ của trình duyệt'],
         ['Dữ liệu trạm (4G telemetry)', 'Chưa kết nối · sự kiện phần cứng được mô phỏng'],
-        ['Bản đồ và định tuyến đường thực (OpenStreetMap)', 'Đã nối từ trình duyệt · bản đồ nền OSM/CARTO, định tuyến Valhalla/OSRM qua máy chủ công cộng miễn phí; chưa có máy chủ riêng, chưa tính giờ cấm tải'],
+        ['Bản đồ và định tuyến đường thực (OpenStreetMap)', 'Đã nối từ trình duyệt · bản đồ nền OpenStreetMap, định tuyến Valhalla/OSRM qua máy chủ công cộng miễn phí; chưa có máy chủ riêng, chưa tính giờ cấm tải'],
         ['Xác thực người dùng', 'Chưa kết nối · chuyển vai trò chỉ để trình diễn'],
         ['Lưu trữ tài liệu', 'Chưa kết nối · chỉ lưu tên tệp trong trình duyệt'],
       ] as [string, string][],

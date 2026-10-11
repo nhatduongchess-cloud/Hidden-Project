@@ -63,18 +63,23 @@ export interface RoadMapProps {
   zoomControl?: boolean;
 }
 
+/**
+ * Keyless raster tiles from OpenStreetMap. CARTO's basemaps were dropped: they now answer every
+ * request without an API key with an "API key required" image, which never triggers a fallback.
+ */
+const OSM = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
 const TILES: { url: string; options: L.TileLayerOptions }[] = [
   {
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    options: {
-      subdomains: 'abcd',
-      maxZoom: 20,
-      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
-    },
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    options: { maxZoom: 19, attribution: OSM },
   },
   {
-    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    options: { maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>' },
+    url: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+    options: {
+      subdomains: 'abc',
+      maxZoom: 19,
+      attribution: `${OSM} · nền <a href="https://www.openstreetmap.fr" target="_blank" rel="noopener">OpenStreetMap France</a>`,
+    },
   },
 ];
 
@@ -167,7 +172,7 @@ export default function RoadMap({
     let provider = 0;
     let loaded = 0;
     let errors = 0;
-    const tileLayer = L.tileLayer(TILES[0].url, { ...TILES[0].options, crossOrigin: true }).addTo(m);
+    const tileLayer = L.tileLayer(TILES[0].url, TILES[0].options).addTo(m);
     tileLayer.on('tileload', () => {
       loaded++;
       setTiles('ok');

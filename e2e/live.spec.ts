@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { mockMapServices } from './roadMocks';
 
 /**
- * A run against the real public map services (CARTO/OSM tiles, Valhalla, OSRM), with no mocks.
+ * A run against the real public map services (OpenStreetMap tiles, Valhalla, OSRM), with no mocks.
  * Skipped unless LIVE is set to an output folder for screenshots, a video and a summary:
  *   LIVE=./live-run npx playwright test live
  * Add PW_CHANNEL=msedge (or chrome) to use an installed browser instead of Playwright's own.

@@ -63,6 +63,15 @@ test('falls back to OSRM when Valhalla does not answer, and says so', async ({ p
   await expect(page.getByText(/Valhalla · OpenStreetMap không phản hồi/)).toBeVisible();
 });
 
+test('the base map falls back to OpenStreetMap France when the main tile server is unreachable', async ({ page }) => {
+  const calls = await mockMapServices(page, { tiles: 'fallback' });
+  await fresh(page, '#driver-map');
+  await expect.poll(() => page.locator('.leaflet-tile-loaded').count()).toBeGreaterThan(3);
+  expect(calls.fallbackTiles).toBeGreaterThan(0);
+  await expect(page.getByText(/Không tải được bản đồ nền/)).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'OpenStreetMap France' })).toBeVisible();
+});
+
 test('without any routing service, distances are a labelled straight-line estimate', async ({ page }) => {
   await mockMapServices(page, { answer: [], tiles: false });
   await fresh(page, '#driver-map');

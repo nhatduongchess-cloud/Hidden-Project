@@ -108,15 +108,19 @@ function osrmRoute(locs: LatLng[]) {
 export interface MockOptions {
   /** Which routing services answer. Those not listed fail, as when the network blocks them. */
   answer?: ('valhalla' | 'osrm')[];
-  tiles?: boolean;
+  /** false: no tile server answers; 'fallback': only the OpenStreetMap France fallback answers. */
+  tiles?: boolean | 'fallback';
 }
 
 export async function mockMapServices(page: Page, opts: MockOptions = {}) {
   const answer = opts.answer ?? ['valhalla'];
-  const calls = { valhalla: 0, osrm: 0, tiles: 0 };
-  await page.route(/basemaps\.cartocdn\.com|tile\.openstreetmap\.org/, (route) => {
+  const calls = { valhalla: 0, osrm: 0, tiles: 0, fallbackTiles: 0 };
+  await page.route(/tile\.openstreetmap\.(org|fr)/, (route) => {
     calls.tiles++;
-    return opts.tiles === false ? route.abort() : route.fulfill({ status: 200, contentType: 'image/png', body: TILE });
+    const fallback = route.request().url().includes('openstreetmap.fr');
+    if (fallback) calls.fallbackTiles++;
+    const answers = opts.tiles === 'fallback' ? fallback : opts.tiles !== false;
+    return answers ? route.fulfill({ status: 200, contentType: 'image/png', body: TILE }) : route.abort('connectionrefused');
   });
   await page.route(/valhalla1\.openstreetmap\.de/, (route) => {
     calls.valhalla++;
