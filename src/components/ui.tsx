@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Icon, type IconName } from './icons';
 import type { OpStatus } from '../domain/ops';
 
@@ -560,7 +561,9 @@ export function Drawer({ open, onClose, title, children, footer, width = 480 }: 
   const ref = useFocusTrap(open);
   const titleId = useId();
   if (!open) return null;
-  return (
+  // Rendered at the page root: a fixed parent (the navigation screen) would otherwise trap it below
+  // that screen's sheet and the top bar.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-ink/30" onClick={onClose} aria-hidden />
       <div
@@ -587,7 +590,8 @@ export function Drawer({ open, onClose, title, children, footer, width = 480 }: 
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -596,7 +600,7 @@ export function Dialog({ open, onClose, title, children, footer, tone }: { open:
   const ref = useFocusTrap(open);
   const titleId = useId();
   if (!open) return null;
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-ink/35" onClick={onClose} aria-hidden />
       <div
@@ -619,7 +623,8 @@ export function Dialog({ open, onClose, title, children, footer, tone }: { open:
         <div className="px-5 py-3 text-sm text-ink-2">{children}</div>
         {footer && <div className="flex flex-wrap justify-end gap-2 px-5 pb-5 pt-1">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

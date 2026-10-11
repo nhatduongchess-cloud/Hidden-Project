@@ -38,7 +38,7 @@ npm run dev          # http://localhost:5173
 npm test             # 73 domain unit tests (Vitest)
 npm run build        # type-check + static site in dist/
 npm run preview      # serve dist/ on http://localhost:4173
-npm run test:e2e     # 19 Playwright browser tests against the production build (map services stubbed)
+npm run test:e2e     # 20 Playwright browser tests against the production build (map services stubbed)
 npm run build:single # one self-contained HTML file in dist-single/index.html
 ```
 

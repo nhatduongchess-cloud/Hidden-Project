@@ -54,6 +54,24 @@ test('nearest station by driving time → turn-by-turn → swap the bin on arriv
   await expect(list).not.toContainText('RE-003');
 });
 
+test('on a phone, the steps list and the swap dialog sit above the navigation sheet', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockMapServices(page);
+  await fresh(page, '#driver-nav-RE-003');
+  await page.getByRole('button', { name: 'Các bước' }).click();
+  await expect(page.getByRole('heading', { name: 'Các bước tới RE-003' })).toBeVisible();
+  // A click fails if anything covers the target, so these also check the stacking order.
+  await page.getByRole('button', { name: 'Đóng' }).click();
+  await page.getByRole('button', { name: 'Bắt đầu', exact: true }).click();
+  await page.getByRole('button', { name: '×20' }).click();
+  await page.getByRole('button', { name: 'Tới chỗ rẽ' }).click();
+  await page.getByText('Đến RE-003 · Thư viện trung tâm, ở bên phải', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Tới chỗ rẽ' }).click();
+  await page.getByRole('button', { name: 'Xác nhận thay thùng' }).click();
+  await page.getByRole('button', { name: 'Đã thay thùng' }).click();
+  await expect(page.getByText(/Đã thay thùng RE-003/)).toBeVisible();
+});
+
 test('falls back to OSRM when Valhalla does not answer, and says so', async ({ page }) => {
   const calls = await mockMapServices(page, { answer: ['osrm'] });
   await fresh(page, '#driver-map');
