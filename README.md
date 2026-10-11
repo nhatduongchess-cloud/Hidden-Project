@@ -141,4 +141,9 @@ Browser tests replace the tile and routing servers with local stand-ins (`e2e/ro
 tests where Valhalla or both services fail. `SCREENS=<folder> npx playwright test screens` captures
 screenshots of the map screens at 390, 834 and 1440 px.
 
+To check the real services, run `npm run build`, then `LIVE=<folder> npm run test:live` on a network that can
+reach them (in PowerShell: `$env:LIVE="live-run"; $env:PW_CHANNEL="msedge"; npm run test:live`). It drives the
+driver map, navigation to the fastest station, arrival and the RE Hub plan with no mocks, and saves
+screenshots, a video and `summary.json` (which routing service answered, the ranking and the steps).
+
 See `WALKTHROUGH.md` for a three-minute demo script.

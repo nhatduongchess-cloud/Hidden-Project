@@ -6,6 +6,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4173',
     launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
+    channel: process.env.PW_CHANNEL || undefined,
   },
   webServer: {
     command: 'npx vite preview --port 4173 --strictPort',
