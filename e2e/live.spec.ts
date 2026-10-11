@@ -11,7 +11,9 @@ import { mockMapServices } from './roadMocks';
  */
 const OUT = process.env.LIVE;
 test.skip(!OUT, 'set LIVE=<folder> to run against the real map services');
-test.use({ viewport: { width: 390, height: 844 }, video: { mode: 'on', size: { width: 390, height: 844 } } });
+// LIVE_VIDEO=0 skips the video (it needs Playwright's ffmpeg: `npx playwright install ffmpeg`).
+const VIDEO = process.env.LIVE_VIDEO !== '0';
+test.use({ viewport: { width: 390, height: 844 }, video: VIDEO ? { mode: 'on', size: { width: 390, height: 844 } } : 'off' });
 
 async function tilesLoaded(page: Page) {
   await expect.poll(() => page.locator('.leaflet-tile-loaded').count(), { timeout: 30_000 }).toBeGreaterThan(3);

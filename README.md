@@ -145,5 +145,6 @@ To check the real services, run `npm run build`, then `LIVE=<folder> npm run tes
 reach them (in PowerShell: `$env:LIVE="live-run"; $env:PW_CHANNEL="msedge"; npm run test:live`). It drives the
 driver map, navigation to the fastest station, arrival and the RE Hub plan with no mocks, and saves
 screenshots, a video and `summary.json` (which routing service answered, the ranking and the steps).
+The video needs Playwright's ffmpeg (`npx playwright install ffmpeg`); set `LIVE_VIDEO=0` to skip it.
 
 See `WALKTHROUGH.md` for a three-minute demo script.
