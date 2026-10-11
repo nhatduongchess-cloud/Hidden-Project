@@ -1,7 +1,8 @@
 import type { AccessWindow } from './types';
 
 /**
- * Illustrative collection routing. Distances are a fixed mock matrix (km), not road data.
+ * Collection routing. Distances come from road data when a routing service answers (see
+ * integrations/roadRouting.ts), otherwise from a fixed mock matrix (km).
  * The planner is a transparent local heuristic: classify stops, select within capacity,
  * then enumerate visiting orders (exhaustive up to 7 stops) and keep the best feasible one.
  * It makes no claim of global optimality and models no real traffic restrictions.
@@ -20,6 +21,46 @@ export const MOCK_DISTANCE_KM: Record<string, Record<string, number>> = {
 export function dist(a: string, b: string): number {
   if (a === b) return 0;
   return MOCK_DISTANCE_KM[a]?.[b] ?? MOCK_DISTANCE_KM[b]?.[a] ?? Infinity;
+}
+
+/**
+ * Distance and travel time between two planner points (DEPOT, PARTNER or a station id).
+ * The default is the mock matrix at the configured average speed; RE Hub swaps in road
+ * distances and truck travel times when a routing service answers.
+ */
+export interface Metric {
+  /** mock: fixed illustrative matrix; road: a routing service; estimate: straight lines × detour factor. */
+  source: 'mock' | 'road' | 'estimate';
+  km(a: string, b: string): number;
+  minutes(a: string, b: string, cfg: PlanConfig): number;
+}
+
+export const MOCK_METRIC: Metric = {
+  source: 'mock',
+  km: dist,
+  minutes: (a, b, cfg) => (dist(a, b) / cfg.speedKmh) * 60,
+};
+
+/** Build a metric from a square matrix over `ids` (seconds and metres). Missing cells fall back to the mock. */
+export function matrixMetric(ids: string[], durationsS: (number | null)[][], distancesM: (number | null)[][], source: 'road' | 'estimate' = 'road'): Metric {
+  const ix = new Map(ids.map((id, i) => [id, i]));
+  const cell = <T,>(m: (T | null)[][], a: string, b: string): T | null => {
+    const i = ix.get(a);
+    const j = ix.get(b);
+    return i === undefined || j === undefined ? null : m[i]?.[j] ?? null;
+  };
+  return {
+    source,
+    km: (a, b) => (a === b ? 0 : (cell(distancesM, a, b) ?? dist(a, b) * 1000) / 1000),
+    // A straight-line estimate has no real travel times: it uses the planner's average speed.
+    minutes: (a, b, cfg) => {
+      if (a === b) return 0;
+      const d = cell(durationsS, a, b);
+      if (source === 'road' && d != null) return d / 60;
+      const m = cell(distancesM, a, b);
+      return ((m != null ? m / 1000 : dist(a, b)) / cfg.speedKmh) * 60;
+    },
+  };
 }
 
 export interface PlanStationInput {
@@ -79,6 +120,8 @@ export interface RouteEval {
 }
 
 export interface PlanResult {
+  /** Where distances and times came from. */
+  metric: Metric['source'];
   candidates: Candidate[];
   selected: string[];
   planned: RouteEval | null;
@@ -105,7 +148,7 @@ export function classify(st: PlanStationInput, cfg: PlanConfig): Candidate {
   return { id: st.id, cls: 'skipped', reason: cfg.includeNearby ? 'below_nearby' : 'below_threshold', st };
 }
 
-export function evaluate(order: string[], stations: Map<string, PlanStationInput>, cfg: PlanConfig): RouteEval {
+export function evaluate(order: string[], stations: Map<string, PlanStationInput>, cfg: PlanConfig, metric: Metric = MOCK_METRIC): RouteEval {
   let t = toMin(cfg.departure);
   let at = DEPOT;
   let km = 0;
@@ -114,9 +157,9 @@ export function evaluate(order: string[], stations: Map<string, PlanStationInput
   const violations: string[] = [];
   for (const id of order) {
     const st = stations.get(id)!;
-    const leg = dist(at, id);
+    const leg = metric.km(at, id);
     km += leg;
-    t += (leg / cfg.speedKmh) * 60;
+    t += metric.minutes(at, id, cfg);
     const open = toMin(st.window.start);
     const close = toMin(st.window.end);
     const wait = Math.max(0, open - t);
@@ -129,9 +172,8 @@ export function evaluate(order: string[], stations: Map<string, PlanStationInput
     stops.push({ id, arriveMin: arrive, waitMin: wait, departMin: t, window: st.window, late, massKg: st.massKg, legKm: leg });
     at = id;
   }
-  const last = dist(at, cfg.endAt);
-  km += last;
-  t += (last / cfg.speedKmh) * 60;
+  km += metric.km(at, cfg.endAt);
+  t += metric.minutes(at, cfg.endAt, cfg);
   if (t > toMin(cfg.shiftEnd)) violations.push('shift_end');
   if (kg > cfg.payloadKg) violations.push('payload');
   if (order.length * cfg.binVolumeM3 > cfg.cargoVolumeM3 + 1e-9) violations.push('volume');
@@ -156,41 +198,45 @@ function permutations<T>(arr: T[]): T[][] {
   return out;
 }
 
-function nearestNeighbour(ids: string[], cfg: PlanConfig): string[] {
+function nearestNeighbour(ids: string[], cfg: PlanConfig, metric: Metric): string[] {
   const left = new Set(ids);
   const out: string[] = [];
   let at = DEPOT;
   while (left.size) {
     let best = '';
     let bd = Infinity;
-    for (const id of left) if (dist(at, id) < bd) (bd = dist(at, id)), (best = id);
+    for (const id of left) {
+      const d = metric.minutes(at, id, cfg);
+      if (d < bd) (bd = d), (best = id);
+    }
     out.push(best);
     left.delete(best);
     at = best;
   }
-  void cfg;
   return out;
 }
 
-function better(a: RouteEval, b: RouteEval | null): boolean {
+/** Fewer violations first; then, with road data, less driving time (the fastest route), else less distance. */
+function better(a: RouteEval, b: RouteEval | null, metric: Metric): boolean {
   if (!b) return true;
   if (a.violations.length !== b.violations.length) return a.violations.length < b.violations.length;
+  if (metric.source !== 'mock' && Math.abs(a.durationMin - b.durationMin) > 1e-6) return a.durationMin < b.durationMin;
   return a.distanceKm < b.distanceKm - 1e-9;
 }
 
-function bestOrder(ids: string[], stations: Map<string, PlanStationInput>, cfg: PlanConfig): RouteEval {
-  const orders = ids.length <= 7 ? permutations(ids) : [nearestNeighbour(ids, cfg)];
+function bestOrder(ids: string[], stations: Map<string, PlanStationInput>, cfg: PlanConfig, metric: Metric): RouteEval {
+  const orders = ids.length <= 7 ? permutations(ids) : [nearestNeighbour(ids, cfg, metric)];
   let best: RouteEval | null = null;
   for (const o of orders) {
-    const e = evaluate(o, stations, cfg);
-    if (better(e, best)) best = e;
+    const e = evaluate(o, stations, cfg, metric);
+    if (better(e, best, metric)) best = e;
   }
   return best!;
 }
 
 const RANK: Record<StopClass, number> = { priority: 0, required: 1, optional: 2, skipped: 3 };
 
-export function planRoute(input: PlanStationInput[], cfg: PlanConfig): PlanResult {
+export function planRoute(input: PlanStationInput[], cfg: PlanConfig, metric: Metric = MOCK_METRIC): PlanResult {
   const stations = new Map(input.map((s) => [s.id, s]));
   const candidates = input.map((s) => classify(s, cfg)).sort((a, b) => RANK[a.cls] - RANK[b.cls] || b.st.currentPct - a.st.currentPct);
   const issues: string[] = [];
@@ -213,10 +259,10 @@ export function planRoute(input: PlanStationInput[], cfg: PlanConfig): PlanResul
   }
 
   if (mandatory.length === 0 && !candidates.some((c) => c.cls === 'optional')) {
-    return { candidates, selected: [], planned: null, baseline: null, feasible: issues.length === 0, issues: issues.length ? issues : ['no_stops'] };
+    return { metric: metric.source, candidates, selected: [], planned: null, baseline: null, feasible: issues.length === 0, issues: issues.length ? issues : ['no_stops'] };
   }
 
-  let planned = mandatory.length ? bestOrder(mandatory, stations, cfg) : null;
+  let planned = mandatory.length ? bestOrder(mandatory, stations, cfg, metric) : null;
   // Optional nearby stops: add one at a time if capacity, time windows and the detour limit allow.
   for (const c of candidates.filter((c) => c.cls === 'optional')) {
     const current = planned?.order ?? [];
@@ -228,8 +274,8 @@ export function planRoute(input: PlanStationInput[], cfg: PlanConfig): PlanResul
       c.reason = 'nearby_no_payload';
       continue;
     }
-    const trial = bestOrder([...current, c.id], stations, cfg);
-    const baseKm = planned ? planned.distanceKm : dist(DEPOT, cfg.endAt);
+    const trial = bestOrder([...current, c.id], stations, cfg, metric);
+    const baseKm = planned ? planned.distanceKm : metric.km(DEPOT, cfg.endAt);
     const baseViol = planned ? planned.violations.length : 0;
     if (trial.violations.length > baseViol) {
       c.reason = 'nearby_no_time';
@@ -244,10 +290,10 @@ export function planRoute(input: PlanStationInput[], cfg: PlanConfig): PlanResul
     c.reason = 'nearby_added';
   }
 
-  if (!planned) return { candidates, selected: [], planned: null, baseline: null, feasible: issues.length === 0, issues: issues.length ? issues : ['no_stops'] };
+  if (!planned) return { metric: metric.source, candidates, selected: [], planned: null, baseline: null, feasible: issues.length === 0, issues: issues.length ? issues : ['no_stops'] };
 
   // Baseline: same stops, fixed station-id order, same constraints.
-  const baseline = evaluate([...planned.order].sort(), stations, cfg);
+  const baseline = evaluate([...planned.order].sort(), stations, cfg, metric);
   const feasible = issues.length === 0 && planned.violations.length === 0;
-  return { candidates, selected: planned.order, planned, baseline, feasible, issues: [...issues, ...planned.violations] };
+  return { metric: metric.source, candidates, selected: planned.order, planned, baseline, feasible, issues: [...issues, ...planned.violations] };
 }

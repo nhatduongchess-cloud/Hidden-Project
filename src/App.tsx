@@ -10,6 +10,8 @@ import { PilotPage } from './pages/site/Pilot';
 import { DesignSystem } from './pages/design/DesignSystem';
 import { AppExperience } from './pages/app/AppExperience';
 import { DriverExperience } from './pages/driver/Driver';
+import { DriverMap } from './pages/driver/DriverMap';
+import { Navigation } from './pages/driver/Navigation';
 import { HubLayout } from './pages/hub/HubLayout';
 
 const EXPERIENCES: { id: Experience; label: string; short: string; href: string; icon: IconName }[] = [
@@ -72,6 +74,8 @@ function routeTitle(r: Route): string {
     'app-history': 'Lịch sử · Ứng dụng RE',
     'app-rewards': 'Điểm thưởng · Ứng dụng RE',
     driver: 'Tuyến của tôi · Tài xế RE',
+    'driver-map': 'Trạm gần nhất · Tài xế RE',
+    'driver-nav': `Dẫn đường tới ${r.param ?? ''} · Tài xế RE`,
     hub: 'Tổng quan · RE Hub',
     'hub-stations': 'Trạm thu gom · RE Hub',
     'hub-station': `${r.param ?? 'Trạm'} · RE Hub`,
@@ -109,7 +113,7 @@ export function App() {
       body = <AppExperience route={route} />;
       break;
     case 'driver':
-      body = <DriverExperience />;
+      body = route.name === 'driver-nav' ? <Navigation key={route.param} targetId={route.param ?? ''} /> : route.name === 'driver-map' ? <DriverMap /> : <DriverExperience />;
       break;
     case 'hub':
       body = <HubLayout route={route} />;

@@ -1,42 +1,33 @@
 import { useState } from 'react';
 import { useAppState, useStore } from '../../lib/store-context';
 import { activeRoute, stationOps } from '../../domain/ops';
-import { activeBinTxs } from '../../domain/selectors';
 import { defaultDispatchConfig, planFor, toAssignedRoute } from '../../domain/dispatch';
 import { fmtMin } from '../../domain/routing';
-import { newId } from '../../domain/ids';
-import type { AssignedRoute, RouteStop, StopClassAssigned } from '../../domain/types';
-import { Icon, Wordmark, type IconName } from '../../components/icons';
-import { Alert, Badge, Button, DemoTag, Dialog, EmptyState, FillMeter, StaleTag, toast, type Tone } from '../../components/ui';
+import { collectTargets, pointOf, truckPos } from '../../domain/places';
+import { fmtDistanceVi, fmtDurationVi } from '../../domain/geo';
+import type { AssignedRoute, RouteStop } from '../../domain/types';
+import { useRoadMetric, useRoadRoute } from '../../lib/roadHooks';
+import { Icon } from '../../components/icons';
+import { Alert, Badge, Button, Dialog, EmptyState, FillMeter, StaleTag, toast } from '../../components/ui';
+import { RoadMap } from '../../components/LazyRoadMap';
 import { dateTime, kg, n0, n1 } from '../../lib/format';
+import { DriverShell, ProviderNote, STOP_CLASS, SwapDialog, placeMarkers } from './shared';
 
-export const STOP_CLASS: Record<StopClassAssigned, { label: string; why: string; tone: Tone; icon: IconName }> = {
-  priority: { label: 'Ưu tiên', why: 'Trạm đã dừng nhận (≥ 95 %)', tone: 'fault', icon: 'stop' },
-  required: { label: 'Bắt buộc', why: 'Đạt 80 % hoặc dự báo đạt trước chuyến sau', tone: 'amber', icon: 'alert' },
-  optional: { label: 'Ghé thêm', why: 'Gần tuyến, xe còn tải và thời gian', tone: 'neutral', icon: 'plus' },
-};
+export { STOP_CLASS } from './shared';
 
 const SKIP_REASONS = ['Không vào được trạm', 'Trạm đang bảo trì', 'Xe hết chỗ', 'Lý do khác'];
 
+const METRIC_NOTE: Record<NonNullable<AssignedRoute['metric']>, string> = {
+  road: 'Quãng đường và thời gian theo đường thực tế lúc lập tuyến.',
+  estimate: 'Quãng đường ước tính theo đường thẳng (chưa có dữ liệu đường lúc lập tuyến).',
+  mock: 'Khoảng cách từ ma trận minh họa.',
+};
+
 function Shell({ children, route }: { children: React.ReactNode; route?: AssignedRoute }) {
   return (
-    <main id="main" tabIndex={-1} className="min-h-[calc(100dvh-44px)] bg-sunk/60 outline-none md:py-6">
-      <div className="mx-auto min-h-[calc(100dvh-44px)] max-w-[480px] bg-paper md:min-h-0 md:rounded-lg md:border md:border-line md:shadow-2">
-        <header className="sticky top-11 z-10 flex min-h-[56px] items-center justify-between gap-3 border-b border-line bg-paper/95 px-4 md:rounded-t-lg">
-          <div className="flex items-center gap-2.5">
-            <Wordmark size={22} />
-            <span className="h-5 w-px bg-line" />
-            <span className="text-sm font-semibold text-ink">Tài xế</span>
-          </div>
-          <div className="flex items-center gap-2">
-            {route && <span className="id-tag text-xs text-muted">{route.id}</span>}
-            <DemoTag>Tuyến minh họa</DemoTag>
-          </div>
-        </header>
-        <div className="px-4 pb-10 pt-4">{children}</div>
-      </div>
-      <p className="mx-auto mt-3 hidden max-w-[480px] text-center text-xs text-muted md:block">Màn hình tài xế · thiết kế cho điện thoại, dùng một tay ngoài trời</p>
-    </main>
+    <DriverShell tab="route" routeId={route?.id}>
+      {children}
+    </DriverShell>
   );
 }
 
@@ -81,12 +72,20 @@ export function DriverExperience() {
   const [skipping, setSkipping] = useState(false);
   const [skipReason, setSkipReason] = useState(SKIP_REASONS[0]);
   const [finishing, setFinishing] = useState(false);
+  const road = useRoadMetric(state);
+  // The whole planned route on the map before starting, and the road to the current stop after.
+  const pendingStop = route?.stops.find((s) => s.status === 'pending');
+  const pendingSt = pendingStop ? state.stations.find((s) => s.id === pendingStop.stationId) : undefined;
+  const plannedPts =
+    route?.status === 'assigned' ? ['DEPOT', ...route.stops.map((s) => s.stationId), route.endAt].map((id) => pointOf(state, id)!).map(({ lat, lng }) => ({ lat, lng })) : null;
+  const planned = useRoadRoute(plannedPts);
+  const leg = useRoadRoute(route?.status === 'in_progress' && pendingSt ? [truckPos(state), { lat: pendingSt.lat, lng: pendingSt.lng }] : null);
 
   if (!route) {
     const lastDone = [...state.routes].reverse().find((r) => r.status === 'done');
     const createDemo = () => {
       const cfg = defaultDispatchConfig(state);
-      const plan = planFor(state, cfg);
+      const plan = planFor(state, cfg, road.metric);
       const r = toAssignedRoute(state, plan, cfg, Date.now());
       if (!r) {
         toast('Không có trạm nào cần thu gom theo quy tắc hiện tại.', 'info');
@@ -153,7 +152,21 @@ export function DriverExperience() {
             <dd className="tnum mt-0.5 font-semibold text-ink">≈ {kg(totalEstKg, 1)}</dd>
           </div>
         </dl>
-        <p className="mt-2 text-xs text-muted">Khoảng cách từ ma trận giả lập. Khối lượng ước tính từ bản ghi trạm.</p>
+        <p className="mt-2 text-xs text-muted">{METRIC_NOTE[route.metric ?? 'mock']} Khối lượng ước tính từ bản ghi trạm.</p>
+        <div className="-mx-4 mt-4 sm:mx-0">
+          <RoadMap
+            className="h-[260px] sm:rounded sm:border sm:border-line"
+            label={`Bản đồ tuyến ${route.id}: bãi xe, ${stops.length} điểm dừng và điểm kết thúc`}
+            markers={placeMarkers(state, collectTargets(state), { order: Object.fromEntries(stops.map((s, i) => [s.stationId, i + 1])) })}
+            lines={planned.value ? [{ id: 'planned', kind: planned.value.provider === 'estimate' ? 'estimate' : 'route', points: planned.value.geometry }] : []}
+            zone={state.settings.zone}
+            fitKey={planned.value ? `r${planned.value.distanceM}` : 'pts'}
+            fitPoints={planned.value?.geometry ?? plannedPts ?? undefined}
+          />
+        </div>
+        <div className="mt-1.5">
+          <ProviderNote provider={planned.value?.provider ?? null} loading={planned.loading} />
+        </div>
         <ol className="mt-4" aria-label="Các điểm dừng">
           {stops.map((s, i) => (
             <StopRow key={s.stationId} stop={s} index={i} current={i === 0} />
@@ -208,7 +221,10 @@ export function DriverExperience() {
             <StopRow key={s.stationId} stop={s} index={i} current={false} />
           ))}
         </ol>
-        <Button variant="primary" size="lg" icon="check" className="mt-5 w-full" onClick={() => setFinishing(true)}>
+        <a href={`#driver-nav-${route.endAt}`} className="btn btn-secondary btn-lg mt-5 w-full">
+          <Icon name="arrowRight" size={20} /> Dẫn đường tới {route.endAt === 'PARTNER' ? 'điểm tiếp nhận' : 'bãi xe'}
+        </a>
+        <Button variant="primary" size="lg" icon="check" className="mt-2 w-full" onClick={() => setFinishing(true)}>
           Kết thúc tuyến
         </Button>
         <Dialog
@@ -240,19 +256,6 @@ export function DriverExperience() {
   const st = state.stations.find((s) => s.id === current.stationId)!;
   const ops = stationOps(state, st);
   const cls = STOP_CLASS[current.cls];
-  const binNow = activeBinTxs(state, st, 'station');
-  const binEstKg = binNow.reduce((s, t) => s + t.acceptedMassG, 0) / 1000;
-
-  const confirmSwap = () => {
-    const ts = Date.now();
-    const collectionId = newId('TG');
-    const newBinId = `BIN-${st.id.slice(3)}-${String(ts).slice(-4)}`;
-    store.dispatch({ type: 'CONFIRM_COLLECTION', stationId: st.id, driver: route.driver, ts, collectionId, newBinId, routeId: route.id });
-    const rec = store.getState().collections.find((c) => c.id === collectionId);
-    setConfirming(false);
-    toast(rec ? `Đã thay thùng ${st.id} · ${n0(rec.bottleCount)} chai vào lô ${rec.batchId}` : `Đã thay thùng ${st.id}`);
-    document.getElementById('main')?.scrollIntoView({ block: 'start' });
-  };
 
   return (
     <Shell route={route}>
@@ -303,6 +306,18 @@ export function DriverExperience() {
           </Alert>
         )}
 
+        <div className="mt-4 flex items-center gap-3 rounded border border-route/30 bg-[rgb(234_241_252)] p-3">
+          <div className="min-w-0 flex-1">
+            <div className="tnum text-base font-bold text-route-ink">
+              {leg.value ? `${fmtDurationVi(leg.value.durationS)} · ${fmtDistanceVi(leg.value.distanceM)}` : 'Đang tìm đường…'}
+            </div>
+            <ProviderNote provider={leg.value?.provider ?? null} loading={!leg.value} compact className="mt-0.5" />
+          </div>
+          <a href={`#driver-nav-${st.id}`} className="btn btn-primary shrink-0">
+            <Icon name="arrowRight" size={17} /> Dẫn đường
+          </a>
+        </div>
+
         <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <div>
             <dt className="text-xs text-muted">Khung giờ vào trạm</dt>
@@ -346,32 +361,14 @@ export function DriverExperience() {
         Kết thúc: {route.endAt === 'PARTNER' ? 'Đối tác tiếp nhận (minh họa)' : 'Kho RE (minh họa)'}
       </div>
 
-      <Dialog
+      <SwapDialog
+        station={st}
+        routeId={route.id}
+        driver={route.driver}
         open={confirming}
         onClose={() => setConfirming(false)}
-        title={`Xác nhận đã thay thùng tại ${st.id}?`}
-        footer={
-          <>
-            <Button onClick={() => setConfirming(false)}>Chưa, quay lại</Button>
-            <Button variant="primary" icon="check" onClick={confirmSwap}>
-              Đã thay thùng
-            </Button>
-          </>
-        }
-      >
-        <p>Xác nhận tạo phiếu thu gom và đặt mức đầy của trạm về 0. Không hoàn tác được trong ứng dụng.</p>
-        <dl className="mt-3 grid grid-cols-2 gap-2 rounded bg-sunk p-3">
-          <div>
-            <dt className="text-xs text-muted">Chai trong thùng</dt>
-            <dd className="tnum font-semibold text-ink">{n0(binNow.length)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted">Khối lượng ước tính</dt>
-            <dd className="tnum font-semibold text-ink">{kg(binEstKg, 2)}</dd>
-          </div>
-        </dl>
-        <p className="mt-2 text-xs text-muted">Số liệu từ bản ghi trạm. Khối lượng thật được cân khi tiếp nhận.</p>
-      </Dialog>
+        onDone={() => document.getElementById('main')?.scrollIntoView({ block: 'start' })}
+      />
 
       <Dialog
         open={skipping}

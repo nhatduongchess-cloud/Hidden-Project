@@ -390,8 +390,11 @@ export const vi = {
     routes: {
       title: 'Lập tuyến thu gom',
       label: 'Ước tính tuyến minh họa',
-      disclaimer:
-        'Khoảng cách lấy từ ma trận giả lập, không phải dữ liệu đường thực. Thuật toán là heuristic cục bộ minh bạch (thử mọi thứ tự khi ≤ 7 điểm), không khẳng định tối ưu toàn cục và không mô hình giờ cấm tải thực tế.',
+      disclaimers: {
+        road: 'Thời gian và quãng đường giữa các điểm lấy từ dịch vụ định tuyến trên dữ liệu OpenStreetMap (máy chủ công cộng miễn phí). Bộ lập tuyến thử mọi thứ tự khi ≤ 7 điểm và chọn thứ tự lái xe nhanh nhất thỏa ràng buộc. Chưa tính kẹt xe theo giờ và giờ cấm tải nội đô; vị trí trạm là minh họa.',
+        estimate: 'Chưa có dữ liệu đường: khoảng cách là đường thẳng × 1,35, thời gian theo tốc độ trung bình. Bộ lập tuyến thử mọi thứ tự khi ≤ 7 điểm. Vị trí trạm là minh họa.',
+        mock: 'Khoảng cách lấy từ ma trận giả lập, không phải dữ liệu đường thực. Thuật toán là heuristic cục bộ minh bạch (thử mọi thứ tự khi ≤ 7 điểm), không khẳng định tối ưu toàn cục và không mô hình giờ cấm tải thực tế.',
+      } as Record<'road' | 'estimate' | 'mock', string>,
       vehicle: 'Xe và ca',
       payload: 'Tải trọng xe (kg)',
       volume: 'Thể tích thùng hàng dùng được (m³)',
@@ -566,11 +569,11 @@ export const vi = {
       scope:
         'Phạm vi: kinh tế mạng lưới trạm (trạm, thu gom, phần thưởng, chi phí cố định nếu nhập). Không gồm trạm xử lý, thuế, lãi vay, khấu hao. Hoàn vốn giản đơn = tổng đầu tư ÷ dòng tiền ròng năm. Không tính giảm phát thải CO₂ vì chưa có phương pháp có cơ sở.',
       integrationsTitle: 'Tích hợp trong tương lai',
-      integrationsNote: 'Bản demo chạy hoàn toàn trong trình duyệt, không cần khóa API. Các điểm tích hợp đã có giao diện lập trình nhưng chưa kết nối.',
+      integrationsNote: 'Bản demo chạy trong trình duyệt, không cần khóa API. Chỉ bản đồ và định tuyến gọi máy chủ công cộng OpenStreetMap (gửi tọa độ trạm, không gửi dữ liệu khác); các điểm tích hợp còn lại chưa kết nối.',
       integrations: [
         ['Cơ sở dữ liệu (Supabase)', 'Chưa kết nối · đang dùng lưu trữ cục bộ của trình duyệt'],
         ['Dữ liệu trạm (4G telemetry)', 'Chưa kết nối · sự kiện phần cứng được mô phỏng'],
-        ['Bản đồ và định tuyến đường thực (OSM, OR-Tools)', 'Chưa kết nối · ma trận khoảng cách giả lập + heuristic cục bộ'],
+        ['Bản đồ và định tuyến đường thực (OpenStreetMap)', 'Đã nối từ trình duyệt · bản đồ nền OSM/CARTO, định tuyến Valhalla/OSRM qua máy chủ công cộng miễn phí; chưa có máy chủ riêng, chưa tính giờ cấm tải'],
         ['Xác thực người dùng', 'Chưa kết nối · chuyển vai trò chỉ để trình diễn'],
         ['Lưu trữ tài liệu', 'Chưa kết nối · chỉ lưu tên tệp trong trình duyệt'],
       ] as [string, string][],

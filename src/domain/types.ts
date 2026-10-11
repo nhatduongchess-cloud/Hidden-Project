@@ -23,6 +23,9 @@ export interface Station {
   /** Position on the illustrative campus map (0–100 units). Not a real location. */
   mapX: number;
   mapY: number;
+  /** Position on the road map. Illustrative, editable in RE Hub settings. */
+  lat: number;
+  lng: number;
   connection: Connection;
   fault: FaultKind | null;
   activeBinId: string;
@@ -111,6 +114,13 @@ export interface Batch {
   evidence: Evidence[];
 }
 
+/** A named point on the road map (depot, receiving partner). */
+export interface Place {
+  lat: number;
+  lng: number;
+  name: string;
+}
+
 export interface Settings {
   pointsPerBottle: number;
   avgBottleMassG: number;
@@ -120,6 +130,12 @@ export interface Settings {
   stopPct: number;
   confidenceThresholdPct: number;
   liquidToleranceG: number;
+  /** Where collection trucks start (illustrative). */
+  depot: Place;
+  /** Where full bins are delivered (illustrative). */
+  partner: Place;
+  /** Collection area: stations inside it are served by the route. */
+  zone: { lat: number; lng: number; radiusKm: number };
 }
 
 export interface DemoUser {
@@ -162,7 +178,7 @@ export interface RouteStop {
   skipReason?: string;
 }
 
-/** A collection route handed from RE Hub to the driver's phone. Distances come from the mock matrix. */
+/** A collection route handed from RE Hub to the driver's phone. */
 export interface AssignedRoute {
   id: string;
   createdAt: number;
@@ -174,6 +190,8 @@ export interface AssignedRoute {
   stops: RouteStop[];
   distanceKm: number;
   durationMin: number;
+  /** Where distances came from: road routing, a straight-line estimate, or the illustrative matrix. */
+  metric?: 'mock' | 'road' | 'estimate';
   status: 'assigned' | 'in_progress' | 'done';
   finishedAt?: number;
 }
@@ -196,6 +214,8 @@ export interface AppState {
   routes: AssignedRoute[];
   /** The demo user signed in to the mobile app. */
   currentUserId: string;
+  /** Last known position of the demo truck (null: at the depot). */
+  driverPos: { lat: number; lng: number } | null;
 }
 
 /** Input describing one item the simulated user puts into the station. */

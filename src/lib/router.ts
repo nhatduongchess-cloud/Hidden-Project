@@ -18,6 +18,8 @@ export type RouteName =
   | 'app-rewards'
   // driver
   | 'driver'
+  | 'driver-map'
+  | 'driver-nav'
   // RE Hub
   | 'hub'
   | 'hub-stations'
@@ -29,7 +31,7 @@ export type RouteName =
 
 export interface Route {
   name: RouteName;
-  /** Station id for hub-station, batch id for hub-trace. */
+  /** Station id for hub-station and driver-nav (also DEPOT / PARTNER), batch id for hub-trace. */
   param?: string;
 }
 
@@ -44,6 +46,7 @@ const SIMPLE: RouteName[] = [
   'app-history',
   'app-rewards',
   'driver',
+  'driver-map',
   'hub',
   'hub-stations',
   'hub-routes',
@@ -63,6 +66,7 @@ export function parseHash(hash: string): Route {
   const h = hash.replace(/^#\/?/, '');
   if (h.startsWith('hub-station-')) return { name: 'hub-station', param: h.slice('hub-station-'.length) };
   if (h.startsWith('hub-trace-')) return { name: 'hub-trace', param: h.slice('hub-trace-'.length) };
+  if (h.startsWith('driver-nav-')) return { name: 'driver-nav', param: h.slice('driver-nav-'.length) };
   if ((SIMPLE as string[]).includes(h)) return { name: h as RouteName };
   if (LEGACY[h]) return { name: LEGACY[h] };
   return { name: 'home' };
@@ -72,6 +76,7 @@ export function hrefOf(r: Route | RouteName): string {
   const route = typeof r === 'string' ? { name: r } : r;
   if (route.name === 'hub-station' && route.param) return `#hub-station-${route.param}`;
   if (route.name === 'hub-trace' && route.param) return `#hub-trace-${route.param}`;
+  if (route.name === 'driver-nav' && route.param) return `#driver-nav-${route.param}`;
   return `#${route.name}`;
 }
 
@@ -95,7 +100,7 @@ export type Experience = 'site' | 'app' | 'driver' | 'hub' | 'design';
 export function experienceOf(r: Route): Experience {
   if (r.name === 'design') return 'design';
   if (r.name.startsWith('app')) return 'app';
-  if (r.name === 'driver') return 'driver';
+  if (r.name.startsWith('driver')) return 'driver';
   if (r.name.startsWith('hub')) return 'hub';
   return 'site';
 }

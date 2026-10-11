@@ -1,7 +1,7 @@
 import type { Settings, Material, BrandId } from './types';
 
-export const STATE_VERSION = 4;
-export const STORAGE_KEY = 're-demo-state-v4';
+export const STATE_VERSION = 5;
+export const STORAGE_KEY = 're-demo-state-v5';
 
 export const DEFAULT_SETTINGS: Settings = {
   pointsPerBottle: 10, // illustrative, editable in demo settings; points have no monetary value
@@ -12,6 +12,18 @@ export const DEFAULT_SETTINGS: Settings = {
   stopPct: 95,
   confidenceThresholdPct: 80,
   liquidToleranceG: 15,
+  // Illustrative locations in Thủ Đức, TP.HCM, chosen only to demonstrate road routing.
+  // They are not a selected pilot site and can be moved in RE Hub → Cài đặt.
+  depot: { lat: 10.8494, lng: 106.7738, name: 'Bãi xe đội thu gom (minh họa)' },
+  partner: { lat: 10.8985, lng: 106.765, name: 'Điểm tiếp nhận (minh họa)' },
+  zone: { lat: 10.8778, lng: 106.8018, radiusKm: 2.5 },
+};
+
+/** Illustrative road-map positions of the demo stations (see DEFAULT_SETTINGS). */
+export const DEFAULT_STATION_LOCATIONS: Record<string, { lat: number; lng: number }> = {
+  'RE-001': { lat: 10.877, lng: 106.799 },
+  'RE-002': { lat: 10.8832, lng: 106.8072 },
+  'RE-003': { lat: 10.8728, lng: 106.8012 },
 };
 
 /** Simulated empty-item mass by material (grams). Used to produce a load-cell reading. */

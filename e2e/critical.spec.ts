@@ -1,10 +1,13 @@
 import { test, expect, type Page } from '@playwright/test';
+import { mockMapServices } from './roadMocks';
 
 /**
- * Critical paths across the four experiences. The demo is local-only; every run starts from the seed.
+ * Critical paths across the four experiences. Every run starts from the seed.
+ * Map tiles and road routing are answered by local stand-ins (see roadMocks.ts).
  * Reduced motion shortens the station animation so the flows stay fast.
  */
 test.beforeEach(async ({ page }) => {
+  await mockMapServices(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/#home');
   await page.evaluate(() => localStorage.clear());

@@ -112,6 +112,13 @@ const COLOR_GROUPS: { name: string; tokens: { key: string; rgb: string; role: st
       { key: 'info', rgb: '52 92 140', role: 'Thông tin trung tính, không đòi hành động.' },
     ],
   },
+  {
+    name: 'Bản đồ',
+    tokens: [
+      { key: 'route', rgb: '26 102 214', role: 'Đường cần đi và xe trên bản đồ, trạm nhanh nhất. Màu xanh tài xế quen từ ứng dụng dẫn đường.' },
+      { key: 'route-ink', rgb: '16 70 156', role: 'Viền đường đi, chữ thời gian lái xe.' },
+    ],
+  },
 ];
 
 /* Ratios computed with the WCAG 2.x relative-luminance formula from the RGB values in index.css. */
@@ -147,6 +154,10 @@ const CONTRAST: Pair[] = [
   { fg: 'ink-2', bg: 'fault-tint', use: 'Nội dung banner dừng nhận', ratio: 8.95, need: 4.5, kind: 'text' },
   { fg: 'ink-2', bg: 'slate-tint', use: 'Nội dung banner mất kết nối', ratio: 9.02, need: 4.5, kind: 'text' },
   { fg: 'white', bg: 'forest', use: 'Nhãn nút chính', ratio: 8.57, need: 4.5, kind: 'text' },
+  { fg: 'white', bg: 'route', use: 'Số thứ hạng trạm nhanh nhất', ratio: 5.36, need: 4.5, kind: 'text' },
+  { fg: 'route-ink', bg: 'paper', use: 'Thời gian lái xe, nút căn giữa', ratio: 7.96, need: 4.5, kind: 'text' },
+  { fg: 'white', bg: 'amber-ink', use: 'Dải cảnh báo "không có dữ liệu đường"', ratio: 6.84, need: 4.5, kind: 'text' },
+  { fg: 'route', bg: 'paper', use: 'Đường đi trên bản đồ', ratio: 4.83, need: 3, kind: 'ui' },
   { fg: 'white', bg: 'forest-ink', use: 'Nút chính khi rê chuột', ratio: 11.96, need: 4.5, kind: 'text' },
   { fg: 'white', bg: 'fault', use: 'Nhãn nút nguy hiểm', ratio: 5.72, need: 4.5, kind: 'text' },
   { fg: 'paper', bg: 'ink', use: 'Toast, phân đoạn đang chọn', ratio: 14.26, need: 4.5, kind: 'text' },

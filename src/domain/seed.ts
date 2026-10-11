@@ -1,5 +1,5 @@
 import type { AppState, Station, Transaction, CollectionRecord, Batch, Material, BrandId, RejectReason, Evidence, WorkOrder } from './types';
-import { DEFAULT_SETTINGS, STATE_VERSION, binCapacityKg, RECEIVING_PARTNER } from './constants';
+import { DEFAULT_SETTINGS, DEFAULT_STATION_LOCATIONS, STATE_VERSION, binCapacityKg, RECEIVING_PARTNER } from './constants';
 
 /**
  * Fictional seed data for the demo. Nothing here is an operating statistic: the pilot has not run.
@@ -151,7 +151,7 @@ export function createSeedState(now: number = Date.now()): AppState {
     makeTxs(st, binId, activeCount, openedAt, now - 30 * 60_000);
     const offline = st.id === OFFLINE_STATION;
     stations.push({
-      id: st.id, name: st.name, site: st.site, mapX: st.mapX, mapY: st.mapY, connection: offline ? 'offline' : 'online', fault: null,
+      id: st.id, name: st.name, site: st.site, mapX: st.mapX, mapY: st.mapY, ...DEFAULT_STATION_LOCATIONS[st.id], connection: offline ? 'offline' : 'online', fault: null,
       activeBinId: binId, binOpenedAt: openedAt, lastUpdate: offline ? now - OFFLINE_FOR_MIN * 60_000 : now - (2 + sIdx * 3) * 60_000,
       accessWindow: { start: st.window[0], end: st.window[1] }, forecastRateBph: st.rate,
     });
@@ -226,5 +226,6 @@ export function createSeedState(now: number = Date.now()): AppState {
     tasks,
     routes: [],
     currentUserId: 'SV-DEMO-01',
+    driverPos: null,
   };
 }

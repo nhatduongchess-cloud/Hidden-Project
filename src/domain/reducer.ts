@@ -1,6 +1,7 @@
 import type { AppState, Transaction, Settings, Station, Evidence, Batch, CollectionRecord, WorkOrder, AssignedRoute } from './types';
 import { fillPct } from './selectors';
 import { newId } from './ids';
+import { DEFAULT_SETTINGS, DEFAULT_STATION_LOCATIONS } from './constants';
 
 export type Action =
   | { type: 'COMMIT_ACCEPTED'; tx: Transaction }
@@ -26,6 +27,11 @@ export type Action =
   | { type: 'UPDATE_SETTINGS'; patch: Partial<Settings> }
   | { type: 'UPDATE_STATION'; stationId: string; patch: Partial<Pick<Station, 'accessWindow' | 'forecastRateBph'>> }
   | { type: 'SET_ROLE'; role: AppState['role']; brandView?: AppState['brandView'] }
+  /** Move a station, the depot or the partner on the map ('DEPOT' / 'PARTNER'). */
+  | { type: 'SET_LOCATION'; target: string; lat: number; lng: number }
+  /** Where the collection truck is (last stop, GPS fix or simulated drive). */
+  | { type: 'SET_DRIVER_POS'; pos: { lat: number; lng: number } | null }
+  | { type: 'RESET_LOCATIONS' }
   | { type: 'REPLACE_STATE'; state: AppState };
 
 const MAX_LOG = 60;
@@ -182,6 +188,8 @@ export function reducer(state: AppState, action: Action): AppState {
       // Replace the active bin: fill restarts at 0, history and lifetime totals stay.
       next = mapStation(next, st.id, (s) => ({ ...s, activeBinId: action.newBinId, binOpenedAt: action.ts }));
       next = withLog(next, { ts: action.ts, stationId: st.id, level: 'info', text: `collected:${rec.bottleCount}` });
+      // The truck is now at this station.
+      next = { ...next, driverPos: { lat: st.lat, lng: st.lng } };
       // Close open collection work orders for this station.
       next = {
         ...next,
@@ -309,6 +317,8 @@ export function reducer(state: AppState, action: Action): AppState {
       const r = state.routes.find((x) => x.id === action.routeId);
       if (!r || r.status === 'done') return state;
       let next = mapRoute(state, r.id, (x) => ({ ...x, status: 'done', finishedAt: action.ts }));
+      const end = r.endAt === 'PARTNER' ? state.settings.partner : state.settings.depot;
+      next = { ...next, driverPos: { lat: end.lat, lng: end.lng } };
       // Stops that were skipped go back to the operator as open work orders.
       const skipped = new Set(r.stops.filter((sp) => sp.status !== 'done').map((sp) => sp.stationId));
       next = {
@@ -334,6 +344,25 @@ export function reducer(state: AppState, action: Action): AppState {
       return mapStation(state, action.stationId, (st) => ({ ...st, ...action.patch }));
     case 'SET_ROLE':
       return { ...state, role: action.role, brandView: action.brandView ?? state.brandView };
+    case 'SET_LOCATION': {
+      if (!Number.isFinite(action.lat) || !Number.isFinite(action.lng)) return state;
+      const at = { lat: action.lat, lng: action.lng };
+      if (action.target === 'DEPOT') return { ...state, settings: { ...state.settings, depot: { ...state.settings.depot, ...at } } };
+      if (action.target === 'PARTNER') return { ...state, settings: { ...state.settings, partner: { ...state.settings.partner, ...at } } };
+      return mapStation(state, action.target, (st) => ({ ...st, ...at }));
+    }
+    case 'SET_DRIVER_POS': {
+      const cur = state.driverPos;
+      if (cur === action.pos || (cur && action.pos && cur.lat === action.pos.lat && cur.lng === action.pos.lng)) return state;
+      return { ...state, driverPos: action.pos };
+    }
+    case 'RESET_LOCATIONS':
+      return {
+        ...state,
+        stations: state.stations.map((st) => (DEFAULT_STATION_LOCATIONS[st.id] ? { ...st, ...DEFAULT_STATION_LOCATIONS[st.id] } : st)),
+        settings: { ...state.settings, depot: DEFAULT_SETTINGS.depot, partner: DEFAULT_SETTINGS.partner, zone: DEFAULT_SETTINGS.zone },
+        driverPos: null,
+      };
     case 'REPLACE_STATE':
       return action.state;
   }

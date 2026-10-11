@@ -5,12 +5,15 @@ import { kg, n0 } from '../../lib/format';
 import { Icon, type IconName } from '../../components/icons';
 import { Badge, Button, DemoTag, Dialog, NumberField, toast } from '../../components/ui';
 import { PageHeader, Panel } from './shared';
+import { RoadMap } from '../../components/LazyRoadMap';
+import { collectTargets } from '../../domain/places';
+import { placeMarkers } from '../driver/shared';
 
 const INTEGRATIONS: { name: string; icon: IconName; now: string; later: string }[] = [
   { name: 'Dữ liệu từ trạm', icon: 'station', now: 'Mô phỏng trong trình duyệt', later: 'Trạm gửi qua 4G, ghi tạm khi mất mạng' },
   { name: 'Lưu trữ', icon: 'layers', now: 'Bộ nhớ trình duyệt này', later: 'Cơ sở dữ liệu có phân quyền theo vai trò' },
-  { name: 'Lập tuyến', icon: 'route', now: 'Heuristic trên ma trận khoảng cách giả lập', later: 'Khoảng cách đường thực và khung giờ cấm tải' },
-  { name: 'Bản đồ', icon: 'map', now: 'Sơ đồ khuôn viên minh họa', later: 'Bản đồ nền và vị trí trạm thật' },
+  { name: 'Lập tuyến', icon: 'route', now: 'Thời gian lái xe từ Valhalla/OSRM (máy chủ OSM công cộng); dự phòng đường thẳng', later: 'Máy chủ định tuyến riêng, giờ cấm tải và kẹt xe theo giờ' },
+  { name: 'Bản đồ', icon: 'map', now: 'Bản đồ nền OpenStreetMap/CARTO; vị trí trạm minh họa', later: 'Vị trí trạm thật sau khảo sát thí điểm' },
   { name: 'Đổi điểm', icon: 'gift', now: 'Chưa có', later: 'Đối tác ưu đãi, chưa thỏa thuận' },
   { name: 'Bên tái chế', icon: 'building', now: 'Tài liệu do người vận hành đính kèm', later: 'Nhận phiếu cân và chứng từ trực tiếp' },
 ];
@@ -130,6 +133,8 @@ export function HubSettings() {
           <p className="border-t border-line px-4 py-2.5 text-xs text-muted">Khung giờ dùng khi lập tuyến. Tốc độ chai/giờ chỉ dùng cho dự báo, không phải số liệu đo.</p>
         </Panel>
 
+        <MapPlaces />
+
         <Panel title="Kết nối hệ thống" className="lg:col-span-2" pad={false}>
           <ul className="divide-y divide-line">
             {INTEGRATIONS.map((i) => (
@@ -139,16 +144,24 @@ export function HubSettings() {
                   {i.name}
                 </span>
                 <span className="flex flex-wrap items-center gap-2 text-sm text-ink-2">
-                  <Badge tone="slate" icon={i.now === 'Chưa có' ? 'x' : 'sliders'}>
-                    {i.now === 'Chưa có' ? 'Chưa kết nối' : 'Mô phỏng'}
-                  </Badge>
+                  {i.name === 'Lập tuyến' || i.name === 'Bản đồ' ? (
+                    <Badge tone="info" icon="link">
+                      Dịch vụ công cộng
+                    </Badge>
+                  ) : (
+                    <Badge tone="slate" icon={i.now === 'Chưa có' ? 'x' : 'sliders'}>
+                      {i.now === 'Chưa có' ? 'Chưa kết nối' : 'Mô phỏng'}
+                    </Badge>
+                  )}
                   {i.now !== 'Chưa có' && i.now}
                 </span>
                 <span className="text-xs text-muted">Dự kiến: {i.later}</span>
               </li>
             ))}
           </ul>
-          <p className="border-t border-line px-4 py-2.5 text-xs text-muted">Bản mẫu không gửi dữ liệu ra ngoài trình duyệt. Không có máy chủ, tài khoản hay khóa API nào được dùng.</p>
+          <p className="border-t border-line px-4 py-2.5 text-xs text-muted">
+            Không có máy chủ RE, tài khoản hay khóa API. Chỉ bản đồ và định tuyến gọi máy chủ công cộng: trình duyệt tải ảnh bản đồ nền và gửi tọa độ trạm, bãi xe, vị trí xe tới Valhalla (FOSSGIS) hoặc OSRM. Không gửi giao dịch, người dùng hay số liệu trạm.
+          </p>
         </Panel>
 
         <Panel title="Dữ liệu demo" className="lg:col-span-2">
@@ -186,5 +199,104 @@ export function HubSettings() {
         Mọi giao dịch, tuyến, yêu cầu và hồ sơ tạo trong bản mẫu sẽ bị xóa.
       </Dialog>
     </>
+  );
+}
+
+/** Where stations, the depot and the receiving partner are, and the collection zone. */
+function MapPlaces() {
+  const state = useAppState();
+  const store = useStore();
+  const { zone, depot, partner } = state.settings;
+  const [reset, setReset] = useState(false);
+  const move = (target: string, lat: number, lng: number) => store.dispatch({ type: 'SET_LOCATION', target, lat, lng });
+  const rows: { id: string; label: string; sub: string; lat: number; lng: number }[] = [
+    ...state.stations.map((st) => ({ id: st.id, label: st.id, sub: st.name, lat: st.lat, lng: st.lng })),
+    { id: 'DEPOT', label: 'Bãi xe', sub: depot.name, lat: depot.lat, lng: depot.lng },
+    { id: 'PARTNER', label: 'Tiếp nhận', sub: partner.name, lat: partner.lat, lng: partner.lng },
+  ];
+  return (
+    <Panel
+      title="Vị trí trên bản đồ"
+      className="lg:col-span-2"
+      actions={
+        <Button size="sm" variant="ghost" icon="refresh" onClick={() => setReset(true)}>
+          Đặt lại vị trí mặc định
+        </Button>
+      }
+    >
+      <p className="max-w-[75ch] text-sm text-ink-2">
+        Vị trí mặc định là điểm minh họa ở khu vực Thủ Đức, TP.HCM, chưa phải địa điểm thí điểm. Kéo ghim trên bản đồ hoặc nhập tọa độ. Thay đổi áp dụng ngay cho tuyến thu gom và màn hình tài xế.
+      </p>
+      <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+        <RoadMap
+          className="h-[380px] rounded border border-line"
+          label="Bản đồ chỉnh vị trí trạm, bãi xe, điểm tiếp nhận và phạm vi thu gom. Ghim kéo được; tọa độ cũng nhập được trong bảng bên cạnh."
+          markers={placeMarkers(state, collectTargets(state), { draggable: true })}
+          zone={zone}
+          fitKey="settings"
+          onMarkerDrag={(id, p) => {
+            move(id, p.lat, p.lng);
+            toast(`Đã đặt lại vị trí ${id === 'DEPOT' ? 'bãi xe' : id === 'PARTNER' ? 'điểm tiếp nhận' : id}.`);
+          }}
+        />
+        <div className="min-w-0">
+          <div className="overflow-x-auto">
+            <table className="table-base min-w-[420px]">
+              <thead>
+                <tr>
+                  <th>Điểm</th>
+                  <th>Vĩ độ</th>
+                  <th>Kinh độ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.id}>
+                    <td>
+                      <span className="id-tag font-semibold">{r.label}</span>
+                      <div className="max-w-[160px] truncate text-xs text-muted">{r.sub}</div>
+                    </td>
+                    <td className="w-[130px]">
+                      <NumberField hideLabel id={`lat-${r.id}`} label={`Vĩ độ ${r.label}`} value={r.lat} min={8} max={24} step={0.0001} onChange={(v) => move(r.id, v, r.lng)} />
+                    </td>
+                    <td className="w-[130px]">
+                      <NumberField hideLabel id={`lng-${r.id}`} label={`Kinh độ ${r.label}`} value={r.lng} min={102} max={110} step={0.0001} onChange={(v) => move(r.id, r.lat, v)} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-3 border-t border-line pt-4">
+            <NumberField id="zone-r" label="Bán kính phạm vi" unit="km" value={zone.radiusKm} min={0.2} max={30} step={0.1} onChange={(v) => store.dispatch({ type: 'UPDATE_SETTINGS', patch: { zone: { ...zone, radiusKm: v } } })} />
+            <NumberField id="zone-lat" label="Tâm: vĩ độ" value={zone.lat} min={8} max={24} step={0.0001} onChange={(v) => store.dispatch({ type: 'UPDATE_SETTINGS', patch: { zone: { ...zone, lat: v } } })} />
+            <NumberField id="zone-lng" label="Tâm: kinh độ" value={zone.lng} min={102} max={110} step={0.0001} onChange={(v) => store.dispatch({ type: 'UPDATE_SETTINGS', patch: { zone: { ...zone, lng: v } } })} />
+          </div>
+          <p className="mt-2 text-xs text-muted">Trạm ngoài phạm vi không được xếp vào danh sách trạm gần nhất của tài xế.</p>
+        </div>
+      </div>
+      <Dialog
+        open={reset}
+        onClose={() => setReset(false)}
+        title="Đặt lại vị trí mặc định?"
+        footer={
+          <>
+            <Button onClick={() => setReset(false)}>Hủy</Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                store.dispatch({ type: 'RESET_LOCATIONS' });
+                setReset(false);
+                toast('Đã đặt lại vị trí trạm, bãi xe, điểm tiếp nhận và phạm vi.');
+              }}
+            >
+              Đặt lại
+            </Button>
+          </>
+        }
+      >
+        Vị trí ba trạm, bãi xe, điểm tiếp nhận và phạm vi thu gom trở về điểm minh họa ban đầu. Xe được đưa về bãi.
+      </Dialog>
+    </Panel>
   );
 }

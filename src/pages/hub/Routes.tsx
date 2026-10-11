@@ -9,7 +9,10 @@ import { kg, n0, n1 } from '../../lib/format';
 import { Icon } from '../../components/icons';
 import { Alert, Badge, Button, DemoTag, Dialog, Disclosure, NumberField, Segmented, Switch, toast } from '../../components/ui';
 import { STOP_CLASS } from '../driver/Driver';
-import { MapLegend, PageHeader, Panel, StationMap } from './shared';
+import { PageHeader, Panel } from './shared';
+import { RouteRoadMap } from './RouteRoadMap';
+import { useRoadMetric } from '../../lib/roadHooks';
+import { ProviderNote } from '../driver/shared';
 
 function Capacity({ label, used, max, unit }: { label: string; used: number; max: number; unit: string }) {
   const p = max > 0 ? Math.min(100, (used / max) * 100) : 0;
@@ -90,9 +93,12 @@ function ActiveRoute({ route }: { route: AssignedRoute }) {
             )}
           </div>
         </div>
-        <div className="min-w-0">
-          <StationMap route={[DEPOT, ...route.stops.map((s) => s.stationId), route.endAt]} label={`Sơ đồ tuyến ${route.id}`} />
-        </div>
+        <RouteRoadMap
+          order={[DEPOT, ...route.stops.filter((s) => s.status === 'pending' || route.status === 'assigned').map((s) => s.stationId), route.endAt]}
+          label={`Bản đồ tuyến ${route.id}`}
+          truck={route.status === 'in_progress' ? (state.driverPos ?? state.settings.depot) : null}
+          className="h-[300px]"
+        />
       </div>
       <Dialog
         open={cancel}
@@ -120,8 +126,11 @@ function ActiveRoute({ route }: { route: AssignedRoute }) {
   );
 }
 
-function Compare({ planned, baseline }: { planned: RouteEval; baseline: RouteEval }) {
-  const diff = baseline.distanceKm > 0 ? ((baseline.distanceKm - planned.distanceKm) / baseline.distanceKm) * 100 : 0;
+function Compare({ planned, baseline, byTime }: { planned: RouteEval; baseline: RouteEval; byTime: boolean }) {
+  // With road data the planner minimises driving time, so that is what the comparison reports.
+  const a = byTime ? planned.durationMin : planned.distanceKm;
+  const b = byTime ? baseline.durationMin : baseline.distanceKm;
+  const diff = b > 0 ? ((b - a) / b) * 100 : 0;
   return (
     <div className="grid grid-cols-2 gap-3 text-sm">
       {[
@@ -141,7 +150,11 @@ function Compare({ planned, baseline }: { planned: RouteEval; baseline: RouteEva
         );
       })}
       <p className="col-span-2 text-xs text-muted">
-        {Math.abs(diff) < 0.05 ? 'Cùng quãng đường với thứ tự cố định cho các điểm dừng này.' : diff > 0 ? `Ngắn hơn ${n1(diff)} % so với đi theo thứ tự mã trạm.` : 'Dài hơn thứ tự cố định vì ưu tiên khung giờ trạm.'}
+        {Math.abs(diff) < 0.05
+          ? `Cùng ${byTime ? 'thời gian lái xe' : 'quãng đường'} với thứ tự cố định cho các điểm dừng này.`
+          : diff > 0
+            ? `${byTime ? 'Nhanh hơn' : 'Ngắn hơn'} ${n1(diff)} % so với đi theo thứ tự mã trạm.`
+            : `${byTime ? 'Chậm hơn' : 'Dài hơn'} thứ tự cố định vì ưu tiên khung giờ trạm.`}
       </p>
     </div>
   );
@@ -156,7 +169,8 @@ export function Routes() {
   const set = <K extends keyof DispatchConfig>(k: K, v: DispatchConfig[K]) => setCfg((c) => ({ ...c, [k]: v }));
   const route = activeRoute(state);
   const running = route?.status === 'in_progress';
-  const plan = useMemo(() => planFor(state, cfg), [state, cfg]);
+  const road = useRoadMetric(state);
+  const plan = useMemo(() => planFor(state, cfg, road.metric), [state, cfg, road.metric]);
   const maxBins = Math.floor((cfg.cargoVolumeM3 + 1e-9) / cfg.binVolumeM3);
   const selected = new Set(plan.selected);
   const unserved = plan.candidates.filter((c) => !selected.has(c.id));
@@ -192,7 +206,17 @@ export function Routes() {
           <input id="rt-end" type="time" className="input tnum" value={cfg.shiftEnd} onChange={(e) => e.target.value && set('shiftEnd', e.target.value)} />
         </div>
         <NumberField id="rt-service" label="Phục vụ mỗi trạm" unit="phút" value={cfg.serviceMin} min={0} max={120} step={1} onChange={(v) => set('serviceMin', v)} />
-        <NumberField id="rt-speed" label="Tốc độ trung bình" unit="km/h" value={cfg.speedKmh} min={1} max={80} step={1} onChange={(v) => set('speedKmh', v)} />
+        <NumberField
+          id="rt-speed"
+          label="Tốc độ trung bình"
+          unit="km/h"
+          value={cfg.speedKmh}
+          min={1}
+          max={80}
+          step={1}
+          onChange={(v) => set('speedKmh', v)}
+          hint={plan.metric === 'road' ? 'Không dùng: thời gian lấy từ dữ liệu đường' : 'Dùng khi chưa có dữ liệu đường'}
+        />
       </div>
       <div className="grid grid-cols-2 gap-3 border-t border-line pt-4">
         <NumberField id="rt-thr" label="Ngưỡng thu gom" unit="%" value={cfg.thresholdPct} min={1} max={95} step={1} onChange={(v) => set('thresholdPct', v)} />
@@ -275,6 +299,10 @@ export function Routes() {
                 <Panel title="Tuyến đề xuất" actions={<DemoTag>Tuyến minh họa</DemoTag>}>
                   <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                     <div className="min-w-0">
+                      <div className="mb-3">
+                        <ProviderNote provider={road.provider} loading={road.loading} />
+                        {road.provider === 'estimate' && !road.loading && <p className="mt-0.5 text-xs text-muted">Không kết nối được dịch vụ định tuyến. Tuyến được xếp theo đường thẳng × 1,35 ở tốc độ trung bình.</p>}
+                      </div>
                       <dl className="grid grid-cols-3 gap-3">
                         <div>
                           <dt className="text-xs text-muted">Quãng đường</dt>
@@ -339,19 +367,8 @@ export function Routes() {
                       </ol>
                     </div>
                     <div className="min-w-0">
-                      <StationMap route={[DEPOT, ...plan.planned.order, cfg.endAt]} baseline={[DEPOT, ...plan.baseline.order, cfg.endAt]} label="Sơ đồ tuyến đề xuất và tuyến đối chứng" />
-                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-2">
-                        <span className="flex items-center gap-1.5">
-                          <span className="h-0.5 w-5 bg-forest" /> Đề xuất
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <span className="h-0 w-5 border-t border-dashed border-muted" /> Thứ tự cố định
-                        </span>
-                      </div>
-                      <div className="mt-2">
-                        <MapLegend />
-                      </div>
-                      <p className="mt-2 text-xs text-muted">{r.disclaimer}</p>
+                      <RouteRoadMap order={[DEPOT, ...plan.planned.order, cfg.endAt]} baseline={[DEPOT, ...plan.baseline.order, cfg.endAt]} label="Bản đồ tuyến đề xuất và tuyến đối chứng" showProvider={false} />
+                      <p className="mt-2 text-xs text-muted">{r.disclaimers[plan.metric]}</p>
                     </div>
                   </div>
                   <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-4">
@@ -386,7 +403,7 @@ export function Routes() {
                     )}
                   </Panel>
                   <Panel title="So với thứ tự cố định">
-                    <Compare planned={plan.planned} baseline={plan.baseline} />
+                    <Compare planned={plan.planned} baseline={plan.baseline} byTime={plan.metric !== 'mock'} />
                   </Panel>
                 </div>
               </>

@@ -22,12 +22,16 @@ Click **Trải nghiệm trả chai**.
 Open **RE Hub**. "Cần xử lý" answers which station, why and what next: RE-003 has stopped at 95 %, and
 RE-002's last reading is stale. Click **Lên lịch thu gom** on RE-003, then **Tạo yêu cầu và lập tuyến**.
 On **Tuyến thu gom**, show the stop classes (Ưu tiên, Bắt buộc, Ghé thêm), the reason on each stop and
-the comparison with the fixed-order baseline. "An illustrative estimate on mock distances." Click
+the comparison with the fixed-order baseline. The route is drawn on the road map; the line under the
+plan says which routing service produced the times ("Đường thực tế · Valhalla" when online). Click
 **Giao tuyến cho tài xế**.
 
-**1:50 – 2:20 · Swap the bin (Tài xế)**
-Open **Tài xế**, click **Bắt đầu tuyến**, then **Xác nhận thay thùng** and **Đã thay thùng** for each
-stop, and **Kết thúc tuyến**. Back in RE Hub, RE-003 is accepting again and its history is kept.
+**1:50 – 2:20 · Drive and swap the bin (Tài xế)**
+Open **Tài xế** and click **Bắt đầu tuyến**. On the stop card click **Dẫn đường**, then **Bắt đầu**:
+the banner shows the next turn, the bottom sheet the arrival time. Pick **×20** and **Tới chỗ rẽ** to
+reach the station, then **Xác nhận thay thùng** and **Đã thay thùng**. Optional: the **Bản đồ** tab
+ranks the remaining stations by driving time from the truck. Finish the other stops from **Tuyến** and
+click **Kết thúc tuyến**. Back in RE Hub, RE-003 is accepting again and its history is kept.
 
 **2:20 – 3:00 · Trace a batch (Nhãn hàng)**
 In the RE Hub sidebar, switch **Xem với vai trò (demo)** to **Nhãn hàng**. Open **LO-0001**: five

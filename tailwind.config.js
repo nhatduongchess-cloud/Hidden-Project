@@ -29,6 +29,8 @@ export default {
         'slate-tint': c('slate-tint'),
         steel: c('steel'),
         info: c('info'),
+        route: c('route'),
+        'route-ink': c('route-ink'),
       },
       fontFamily: {
         sans: ['"Be Vietnam Pro"', 'system-ui', '"Segoe UI"', 'Roboto', 'sans-serif'],

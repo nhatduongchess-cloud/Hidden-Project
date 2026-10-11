@@ -1,6 +1,6 @@
 import type { AppState, AssignedRoute, StopClassAssigned } from './types';
 import { activeBinMassKg, fillPct, forecastPctAfter } from './selectors';
-import { planRoute, PARTNER, type PlanConfig, type PlanResult, type PlanStationInput } from './routing';
+import { planRoute, PARTNER, MOCK_METRIC, type Metric, type PlanConfig, type PlanResult, type PlanStationInput } from './routing';
 import { nextRouteId } from './reducer';
 
 /** Planner settings an operator edits in RE Hub, plus the forecast horizon. */
@@ -38,8 +38,8 @@ export function planInputs(state: AppState, nextHours: number): PlanStationInput
   }));
 }
 
-export function planFor(state: AppState, cfg: DispatchConfig): PlanResult {
-  return planRoute(planInputs(state, cfg.nextHours), cfg);
+export function planFor(state: AppState, cfg: DispatchConfig, metric: Metric = MOCK_METRIC): PlanResult {
+  return planRoute(planInputs(state, cfg.nextHours), cfg, metric);
 }
 
 /** Turn a planner result into the route handed to the driver's phone. */
@@ -67,6 +67,7 @@ export function toAssignedRoute(state: AppState, plan: PlanResult, cfg: Dispatch
     }),
     distanceKm: plan.planned.distanceKm,
     durationMin: plan.planned.durationMin,
+    metric: plan.metric,
     status: 'assigned',
   };
 }

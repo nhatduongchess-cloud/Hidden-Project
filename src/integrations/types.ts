@@ -1,7 +1,8 @@
 /**
- * Integration boundaries. The demo ships only local/simulated implementations (see ./local.ts).
- * Production adapters (Supabase, station telemetry over 4G, road routing, mapping, authentication,
- * evidence storage) would implement these interfaces. None are connected in this prototype.
+ * Integration boundaries. The demo ships local/simulated implementations (see ./local.ts), except
+ * maps and road routing, which call free public OpenStreetMap services from the browser
+ * (./roadRouting.ts). Production adapters (Supabase, station telemetry over 4G, a self-hosted
+ * routing server, authentication, evidence storage) would implement these interfaces.
  */
 import type { AppState, Transaction, Evidence } from '../domain/types';
 import type { PlanConfig, PlanResult, PlanStationInput } from '../domain/routing';
@@ -22,13 +23,13 @@ export interface TelemetrySource {
   upload(stationId: string, records: Transaction[]): Promise<{ accepted: number; duplicates: number }>;
 }
 
-/** Route planning. Demo: local heuristic on a mock distance matrix. Future: OR-Tools CVRPTW service on OSM road distances. */
+/** Route planning. Demo: local exhaustive search on road travel times from public Valhalla/OSRM servers. Future: a self-hosted routing server and a CVRPTW solver for larger fleets. */
 export interface RoutingProvider {
   status(): IntegrationStatus;
   plan(stations: PlanStationInput[], cfg: PlanConfig): Promise<PlanResult>;
 }
 
-/** Map tiles and geocoding. Demo: an illustrative campus diagram with no real coordinates. */
+/** Map tiles and geocoding. Demo: OpenStreetMap/CARTO tiles with illustrative station coordinates; no geocoding. */
 export interface MapProvider {
   status(): IntegrationStatus;
 }

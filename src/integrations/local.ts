@@ -2,7 +2,7 @@ import type { DataRepository, TelemetrySource, RoutingProvider, MapProvider, Aut
 import type { Store } from '../domain/store';
 import { planRoute } from '../domain/routing';
 
-/** Local implementations used by the demo. No network calls, no API keys. */
+/** Local implementations used by the demo. No network calls, no API keys. Road routing lives in ./roadRouting.ts. */
 export function createLocalIntegrations(store: Store) {
   const repo: DataRepository = {
     status: () => ({ id: 'data', connected: false, mode: 'local' }),

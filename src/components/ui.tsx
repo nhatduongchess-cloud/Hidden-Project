@@ -270,6 +270,7 @@ export function NumberField({
   unit,
   error,
   disabled,
+  hideLabel,
 }: {
   id: string;
   label: string;
@@ -282,6 +283,8 @@ export function NumberField({
   unit?: string;
   error?: string;
   disabled?: boolean;
+  /** Keep the label for assistive tech only, e.g. inside a table with column headers. */
+  hideLabel?: boolean;
 }) {
   const [text, setText] = useState(String(value));
   const [bad, setBad] = useState<string | null>(null);
@@ -291,7 +294,7 @@ export function NumberField({
   const msg = error ?? bad;
   return (
     <div className="min-w-0">
-      <label htmlFor={id} className="field-label">
+      <label htmlFor={id} className={hideLabel ? 'sr-only' : 'field-label'}>
         {label}
         {unit && <span className="ml-1 font-normal text-muted">({unit})</span>}
       </label>
