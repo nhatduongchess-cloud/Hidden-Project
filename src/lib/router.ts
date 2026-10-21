@@ -23,6 +23,7 @@ export type RouteName =
   | 'driver-live'
   // RE Hub
   | 'hub'
+  | 'hub-map'
   | 'hub-stations'
   | 'hub-station'
   | 'hub-routes'
@@ -41,19 +42,11 @@ export interface Route {
 }
 
 const SIMPLE: RouteName[] = [
-  'home',
-  'explorer',
-  'pilot',
-  'design',
-  'app',
-  'app-stations',
-  'app-return',
-  'app-history',
-  'app-rewards',
   'driver',
   'driver-map',
   'driver-live',
   'hub',
+  'hub-map',
   'hub-stations',
   'hub-routes',
   'hub-fleet',
@@ -66,10 +59,9 @@ const SIMPLE: RouteName[] = [
 ];
 
 const LEGACY: Record<string, RouteName> = {
-  station: 'explorer',
+  station: 'hub-stations',
   'hub-overview': 'hub',
-  'hub-map': 'hub-stations',
-  'hub-pilot': 'pilot',
+  'hub-pilot': 'hub',
 };
 
 export function parseHash(hash: string): Route {
@@ -78,10 +70,9 @@ export function parseHash(hash: string): Route {
   if (h.startsWith('hub-trace-')) return { name: 'hub-trace', param: h.slice('hub-trace-'.length) };
   if (h.startsWith('driver-nav-')) return { name: 'driver-nav', param: h.slice('driver-nav-'.length) };
   if (h.startsWith('driver-live-')) return { name: 'driver-live', param: h.slice('driver-live-'.length) };
-  if (h.startsWith('explorer-')) return { name: 'explorer', param: h.slice('explorer-'.length) };
   if ((SIMPLE as string[]).includes(h)) return { name: h as RouteName };
   if (LEGACY[h]) return { name: LEGACY[h] };
-  return { name: 'home' };
+  return { name: 'hub' };
 }
 
 export function hrefOf(r: Route | RouteName): string {
@@ -89,7 +80,7 @@ export function hrefOf(r: Route | RouteName): string {
   if (route.name === 'hub-station' && route.param) return `#hub-station-${route.param}`;
   if (route.name === 'hub-trace' && route.param) return `#hub-trace-${route.param}`;
   if (route.name === 'driver-nav' && route.param) return `#driver-nav-${route.param}`;
-  if (route.name === 'explorer' && route.param) return `#explorer-${route.param}`;
+  if (!route.name.startsWith('hub') && !route.name.startsWith('driver')) return '#hub';
   return `#${route.name}`;
 }
 
@@ -102,8 +93,16 @@ export function navigate(r: Route | RouteName, opts: { keepScroll?: boolean } = 
 export function useRoute(): Route {
   const [r, setR] = useState<Route>(() => parseHash(typeof location !== 'undefined' ? location.hash : ''));
   useEffect(() => {
-    const on = () => setR(parseHash(location.hash));
+    const on = () => {
+      const next = parseHash(location.hash);
+      // Normalize retired links from the current URL, never a stale render.
+      if (next.name === 'hub' && location.hash !== '#hub') {
+        history.replaceState(null, '', `${location.pathname}${location.search}#hub`);
+      }
+      setR(next);
+    };
     window.addEventListener('hashchange', on);
+    on();
     return () => window.removeEventListener('hashchange', on);
   }, []);
   return r;
@@ -111,9 +110,6 @@ export function useRoute(): Route {
 
 export type Experience = 'site' | 'app' | 'driver' | 'hub' | 'design';
 export function experienceOf(r: Route): Experience {
-  if (r.name === 'design') return 'design';
-  if (r.name.startsWith('app')) return 'app';
   if (r.name.startsWith('driver')) return 'driver';
-  if (r.name.startsWith('hub')) return 'hub';
-  return 'site';
+  return 'hub';
 }

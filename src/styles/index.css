@@ -18,7 +18,7 @@
   --c-forest-ink: 18 81 62;
   --c-forest-tint: 229 244 236;
   background: rgb(var(--c-paper));
-  min-height: calc(100vh - 44px);
+  min-height: 100dvh;
 }
 .ops-shell h1 { font-size: clamp(25px, 2.3vw, 32px); letter-spacing: -.035em; }
 .ops-shell .card { border-radius: 14px; box-shadow: 0 2px 4px rgb(25 49 42 / .025); }

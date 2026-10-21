@@ -28,16 +28,12 @@ function routedLatitudes(page: Page): number[] {
   return lats;
 }
 
-test('pick Hà Nội in the header, then the driver ranks and navigates to stations there', async ({ page }) => {
+test('pick Hà Nội in Hub settings, then the driver ranks and navigates to stations there', async ({ page }) => {
   await mockMapServices(page);
   const lats = routedLatitudes(page);
-  await page.getByRole('button', { name: /Trạm gần bạn\s*TP\.HCM · minh họa/ }).click();
-  const dialog = page.getByRole('dialog', { name: 'Chọn khu vực' });
-  await expect(dialog.getByRole('button', { name: 'TP. Hồ Chí Minh' })).toHaveAttribute('aria-current', 'true');
-  await dialog.getByRole('button', { name: 'Hà Nội' }).click();
-  await expect(dialog).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /Trạm gần bạn\s*Hà Nội · minh họa/ })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Trạm gần bạn' })).toContainText('Hà Nội · minh họa');
+  await page.goto('/#hub-settings');
+  await page.getByRole('combobox', { name: 'Khu vực minh họa' }).selectOption('hn');
+  await expect(page.getByRole('spinbutton', { name: 'Vĩ độ RE-001' })).toHaveValue(/^21\./);
 
   await page.goto('/#driver-map');
   await expect(page.getByRole('combobox', { name: 'Khu vực minh họa' })).toHaveValue('hn');
@@ -91,11 +87,11 @@ test.describe('a phone in another city', () => {
   });
 });
 
-test('on a phone the area strip under the search opens the same picker', async ({ page }) => {
+test('on a phone the station map can switch collection areas', async ({ page }) => {
+  await mockMapServices(page);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: /Trạm gần bạn: TP\.HCM · minh họa/ }).click();
-  await page.getByRole('dialog', { name: 'Chọn khu vực' }).getByRole('button', { name: 'Cần Thơ' }).click();
-  await expect(page.getByRole('button', { name: /Trạm gần bạn: Cần Thơ · minh họa/ })).toBeVisible();
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-  expect(overflow).toBeLessThanOrEqual(0);
+  await page.goto('/#hub-map');
+  await page.getByRole('combobox', { name: 'Khu vực minh họa' }).selectOption('ct');
+  await expect(page.getByRole('combobox', { name: 'Khu vực minh họa' })).toHaveValue('ct');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

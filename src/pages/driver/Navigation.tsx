@@ -429,7 +429,7 @@ export function Navigation({ targetId }: { targetId: string }) {
   }
 
   return (
-    <main id="main" tabIndex={-1} className="fixed inset-x-0 bottom-0 top-[calc(44px+env(safe-area-inset-top,0px))] overflow-hidden bg-paper outline-none">
+    <main id="main" tabIndex={-1} className="fixed inset-x-0 bottom-0 top-[env(safe-area-inset-top,0px)] overflow-hidden bg-paper outline-none">
       <RoadMap
         className="absolute inset-0"
         label={`Bản đồ dẫn đường tới ${destName}`}

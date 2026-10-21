@@ -15,9 +15,12 @@ import { HubSettings } from './Settings';
 import { Analytics, Kpis } from './Analytics';
 import { Forecasts } from './Forecasts';
 import { Fleet } from './Fleet';
+import { NetworkMap } from './NetworkMap';
+import { PageHeader, Panel } from './shared';
 
 const NAV: { name: RouteName; href: string; label: string; icon: IconName; brand?: boolean }[] = [
   { name: 'hub', href: '#hub', label: 'Tổng quan', icon: 'grid' },
+  { name: 'hub-map', href: '#hub-map', label: 'Bản đồ trạm', icon: 'map' },
   { name: 'hub-stations', href: '#hub-stations', label: 'Trạm thu gom', icon: 'station' },
   { name: 'hub-analytics', href: '#hub-analytics', label: 'Số lượng thu gom', icon: 'bottle', brand: true },
   { name: 'hub-forecasts', href: '#hub-forecasts', label: 'Dự báo mức đầy', icon: 'clock' },
@@ -57,7 +60,7 @@ function RoleSwitch() {
   return (
     <div className="flex flex-col gap-2">
       <Segmented
-        label="Xem với vai trò (demo)"
+        label="Chế độ xem"
         name="hub-role"
         size="sm"
         value={state.role}
@@ -84,7 +87,7 @@ function RoleSwitch() {
           ]}
         />
       )}
-      <p className="text-[11px] leading-snug text-muted">Chuyển vai trò để trình diễn, không phải đăng nhập.</p>
+      <p className="text-[11px] leading-snug text-muted">Dữ liệu trạm mẫu · <a href="#hub-settings" className="underline">Cấu hình</a></p>
     </div>
   );
 }
@@ -195,6 +198,7 @@ function Page({ route }: { route: Route }) {
   const brandOk = route.name === 'hub-transactions' || route.name === 'hub-trace' || route.name === 'hub-analytics';
   if (brand && !brandOk) return <BrandOnly />;
   switch (route.name) {
+    case 'hub-map': return <><PageHeader title="Bản đồ trạm" sub="Vị trí, trạng thái hoạt động và mức đầy của từng trạm." actions={<a href="#hub-stations" className="btn btn-secondary">Danh sách trạm</a>} /><Panel pad={false}><NetworkMap /></Panel></>;
     case 'hub-fleet': return <Fleet />;
     case 'hub-analytics': return <Analytics />;
     case 'hub-forecasts': return <Forecasts />;
@@ -245,8 +249,8 @@ export function HubLayout({ route }: { route: Route }) {
 
   if (full) {
     shell = (
-      <div className="flex min-h-[calc(100vh-44px)]">
-        <aside className="sticky top-11 flex h-[calc(100vh-44px)] w-[240px] shrink-0 flex-col border-r border-line bg-panel px-3 py-4">
+      <div className="flex min-h-screen">
+        <aside className="sticky top-0 flex h-dvh w-[240px] shrink-0 flex-col border-r border-line bg-panel px-3 py-4">
           <div className="px-2 pb-5">
             <Brand />
           </div>
@@ -262,8 +266,8 @@ export function HubLayout({ route }: { route: Route }) {
     );
   } else if (rail) {
     shell = (
-      <div className="flex min-h-[calc(100vh-44px)]">
-        <aside className="sticky top-11 flex h-[calc(100vh-44px)] w-[84px] shrink-0 flex-col items-stretch border-r border-line bg-panel px-1.5 py-3">
+      <div className="flex min-h-screen">
+        <aside className="sticky top-0 flex h-dvh w-[84px] shrink-0 flex-col items-stretch border-r border-line bg-panel px-1.5 py-3">
           <div className="mb-3 flex justify-center">
             <Brand compact />
           </div>
@@ -274,15 +278,15 @@ export function HubLayout({ route }: { route: Route }) {
           </button>
         </aside>
         {content}
-        <Drawer open={menu} onClose={() => setMenu(false)} title="Vai trò demo" width={360}>
+        <Drawer open={menu} onClose={() => setMenu(false)} title="Chế độ xem" width={360}>
           <RoleSwitch />
         </Drawer>
       </div>
     );
   } else {
     shell = (
-      <div className="min-h-[calc(100vh-44px)]">
-        <header className="sticky top-11 z-20 flex h-14 items-center justify-between border-b border-line bg-panel/95 px-4">
+      <div className="min-h-screen">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-line bg-panel/95 px-4">
           <Brand />
           <button type="button" className="btn btn-secondary btn-sm" onClick={() => setMenu(true)} aria-expanded={menu}>
             <Icon name="menu" size={18} />
