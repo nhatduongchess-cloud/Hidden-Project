@@ -17,10 +17,11 @@ describe('operator attention', () => {
   it('ranks stopped before disconnected before warnings, one row per station', () => {
     const s = createSeedState(NOW);
     const items = attentionItems(s, NOW);
-    expect(items.map((i) => i.stationId)).toEqual(['RE-003', 'RE-002', 'RE-001']);
+    expect(items.map((i) => i.stationId)).toEqual(['RE-003', 'RE-002']);
     expect(items[0]).toMatchObject({ kind: 'full', severity: 'stop' });
     expect(items[1]).toMatchObject({ kind: 'offline', severity: 'stale', also: ['warning'] });
-    expect(items[2]).toMatchObject({ kind: 'forecast', severity: 'warn' });
+    // Historical demand does not fill RE-001 within the 12-hour horizon.
+    expect(items.some(i => i.stationId === 'RE-001')).toBe(false);
   });
 
   it('a disconnected station shows its last synced reading as stale, not a live value', () => {

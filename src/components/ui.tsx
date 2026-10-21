@@ -434,11 +434,11 @@ export function Segmented<T extends string>({
         {options.map((o) => (
           <label
             key={o.value}
-            className={`inline-flex cursor-pointer items-center rounded-sm font-medium transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-forest ${
+            className={`relative inline-flex cursor-pointer items-center rounded-sm font-medium transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-forest ${
               size === 'sm' ? 'min-h-[30px] px-2.5 text-xs' : 'min-h-[36px] px-3 text-sm'
             } ${value === o.value ? 'bg-ink text-paper' : 'text-ink-2 hover:bg-sunk'}`}
           >
-            <input type="radio" name={name} value={o.value} checked={value === o.value} onChange={() => onChange(o.value)} className="sr-only" />
+            <input type="radio" name={name} value={o.value} checked={value === o.value} onChange={() => onChange(o.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
             {o.label}
           </label>
         ))}

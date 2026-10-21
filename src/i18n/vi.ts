@@ -391,7 +391,7 @@ export const vi = {
       title: 'Lập tuyến thu gom',
       label: 'Ước tính tuyến minh họa',
       disclaimers: {
-        road: 'Thời gian và quãng đường giữa các điểm lấy từ dịch vụ định tuyến trên dữ liệu OpenStreetMap (máy chủ công cộng miễn phí). Bộ lập tuyến thử mọi thứ tự khi ≤ 7 điểm và chọn thứ tự lái xe nhanh nhất thỏa ràng buộc. Chưa tính kẹt xe theo giờ và giờ cấm tải nội đô; vị trí trạm là minh họa.',
+        road: 'Dữ liệu đường từ OpenStreetMap qua dịch vụ công cộng. Thử mọi thứ tự khi ≤ 7 điểm đã chọn theo mục tiêu ít km hoặc ít thời gian; trên 7 điểm dùng phương pháp tham lam. Giờ cấm do người vận hành nhập, chưa xét giao thông trực tiếp. Vị trí trạm là minh họa.',
         estimate: 'Chưa có dữ liệu đường: khoảng cách là đường thẳng × 1,35, thời gian theo tốc độ trung bình. Bộ lập tuyến thử mọi thứ tự khi ≤ 7 điểm. Vị trí trạm là minh họa.',
         mock: 'Khoảng cách lấy từ ma trận giả lập, không phải dữ liệu đường thực. Thuật toán là heuristic cục bộ minh bạch (thử mọi thứ tự khi ≤ 7 điểm), không khẳng định tối ưu toàn cục và không mô hình giờ cấm tải thực tế.',
       } as Record<'road' | 'estimate' | 'mock', string>,
@@ -413,7 +413,7 @@ export const vi = {
       endDepot: 'Kho RE',
       windows: 'Khung giờ vào trạm (sửa được)',
       forecastNote: (h: number) =>
-        `Dự báo mức đầy = mức hiện tại + tốc độ giả định của trạm × ${h} giờ. Tốc độ là giả định demo, không phải dữ liệu lịch sử thực.`,
+        `Dự báo ${h} giờ theo lịch sử nhận chai, giờ mở cửa và kịch bản nhu cầu; dùng tốc độ giả định nếu chưa đủ lịch sử.`,
       candidates: 'Phân loại trạm',
       candCols: ['Trạm', 'Hiện tại', 'Dự báo', 'Khối lượng ước tính', 'Phân loại'],
       cls: { priority: 'Ưu tiên (≥ 95 %)', required: 'Bắt buộc', optional: 'Ghé thêm', skipped: 'Không ghé' } as Record<string, string>,
@@ -440,9 +440,11 @@ export const vi = {
       feasible: 'Khả thi với các ràng buộc',
       infeasible: 'Không khả thi: cần điều chỉnh',
       issues: {
+        invalid_config: () => 'Kiểm tra cấu hình: tải trọng 1–1.000 kg, thể tích và tốc độ lớn hơn 0, ca làm việc và khung cấm hợp lệ',
+        unreachable: () => 'Không có đường đi hợp lệ giữa các điểm trong tuyến',
         payload_required: (id: string) => `${id}: vượt tải trọng xe, trạm bắt buộc bị bỏ lại`,
         volume_required: (id: string) => `${id}: hết thể tích thùng hàng, trạm bắt buộc bị bỏ lại`,
-        window: (id: string) => `${id}: đến sau khung giờ vào trạm`,
+        window: (id: string) => `${id}: không đủ thời gian thay thùng trong khung giờ mở cửa`,
         shift_end: () => 'Về điểm cuối sau giờ kết thúc ca',
         payload: () => 'Tổng khối lượng vượt tải trọng',
         volume: () => 'Tổng số thùng vượt thể tích thùng hàng',

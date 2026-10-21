@@ -153,7 +153,7 @@ test.describe('phone', () => {
     await page.getByRole('button', { name: 'Đóng' }).click();
     await page.goto('/#hub');
     await page.getByRole('button', { name: /Tổng quan/ }).click();
-    await page.getByRole('link', { name: 'Tuyến thu gom' }).click();
+    await page.getByRole('link', { name: 'Tuyến thu gom', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Tuyến thu gom' })).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);

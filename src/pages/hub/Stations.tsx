@@ -362,7 +362,7 @@ export function StationDetail({ id }: { id: string }) {
               </dl>
             )}
             <p className="mt-3 text-xs text-muted">
-              Giả định {n0(st.forecastRateBph)} chai/giờ khi trạm mở cửa{o.stale ? ', tính từ lần đọc cuối' : ''}. Sửa trong Cài đặt.
+              Dùng lịch sử đã đồng bộ theo giờ/ngày; khi chưa đủ dữ liệu dùng giả định {n0(st.forecastRateBph)} chai/giờ. <a href="#hub-forecasts" className="text-forest underline">Xem biểu đồ và kịch bản</a>.
             </p>
           </Panel>
 

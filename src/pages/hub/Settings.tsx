@@ -132,7 +132,7 @@ export function HubSettings() {
               </tbody>
             </table>
           </div>
-          <p className="border-t border-line px-4 py-2.5 text-xs text-muted">Khung giờ dùng khi lập tuyến. Tốc độ chai/giờ chỉ dùng cho dự báo, không phải số liệu đo.</p>
+          <p className="border-t border-line px-4 py-2.5 text-xs text-muted">Khung giờ dùng cho lập tuyến và dự báo. Tốc độ chai/giờ là phương án dự phòng khi chưa đủ 7 ngày và 30 chai lịch sử.</p>
         </Panel>
 
         <MapPlaces />

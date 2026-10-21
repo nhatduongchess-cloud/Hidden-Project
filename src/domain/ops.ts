@@ -1,5 +1,6 @@
 import type { AppState, Station, WorkOrder, AssignedRoute, Batch, Transaction } from './types';
-import { fillPct, activeBinTxs, hoursToPct } from './selectors';
+import { fillPct, activeBinTxs } from './selectors';
+import { forecastStation } from './forecast';
 import { summarizeBatch } from './report';
 import { DISCREPANCY_FLAG_PCT } from './constants';
 
@@ -34,6 +35,7 @@ export interface StationOps {
 }
 
 export function stationOps(state: AppState, station: Station, now = Date.now()): StationOps {
+  const forecast = forecastStation(state, station, now);
   const hubFillPct = fillPct(state, station, 'hub');
   const { warnPct, stopPct } = state.settings;
   const op: OpStatus = station.fault
@@ -67,8 +69,8 @@ export function stationOps(state: AppState, station: Station, now = Date.now()):
     binBottles: bin.length,
     todayBottles,
     todayRejected,
-    hoursTo80: hoursToPct(state, station, warnPct, 'hub'),
-    hoursTo95: hoursToPct(state, station, stopPct, 'hub'),
+    hoursTo80: forecast.reaches80At === null ? null : (forecast.reaches80At - now) / 3_600_000,
+    hoursTo95: forecast.reaches95At === null ? null : (forecast.reaches95At - now) / 3_600_000,
   };
 }
 

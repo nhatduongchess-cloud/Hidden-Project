@@ -2,6 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
+/* RE Hub: quiet white work surfaces and a blue-green ground. The station fill strip
+   is the signature: identical on the map cards, forecasts and collection controls. */
+.ops-shell {
+  --c-paper: 244 248 247;
+  --c-panel: 255 255 255;
+  --c-sunk: 236 243 240;
+  --c-ink: 25 49 42;
+  --c-ink-2: 57 78 70;
+  --c-muted: 94 113 105;
+  --c-line: 219 230 224;
+  --c-line-strong: 174 194 183;
+  --c-field: 126 149 138;
+  --c-forest: 25 113 86;
+  --c-forest-ink: 18 81 62;
+  --c-forest-tint: 229 244 236;
+  background: rgb(var(--c-paper));
+  min-height: calc(100vh - 44px);
+}
+.ops-shell h1 { font-size: clamp(25px, 2.3vw, 32px); letter-spacing: -.035em; }
+.ops-shell .card { border-radius: 14px; box-shadow: 0 2px 4px rgb(25 49 42 / .025); }
+.ops-shell .btn { border-radius: 8px; }
+.ops-shell .input { border-radius: 7px; }
+.ops-shell aside nav a { min-height: 44px; border-radius: 8px; }
+.ops-shell aside { overflow-y: auto; }
+.ops-shell aside > * { flex-shrink: 0; }
+.ops-shell aside nav a[aria-current="page"] { box-shadow: inset 3px 0 0 rgb(var(--c-forest)); }
+.ops-shell .table-base thead { background: rgb(var(--c-paper)); }
+.ops-driver-link { display:flex; align-items:center; gap:10px; margin:24px 4px; padding:14px 10px; border:1px solid rgb(var(--c-line)); border-radius:10px; font-size:12px; color:rgb(var(--c-forest)); }
+.ops-driver-link span { flex:1; font-weight:600; }
+.ops-driver-link small { display:block; font-size:10px; font-weight:400; color:rgb(var(--c-muted)); margin-top:3px; }
+.ops-driver-link:hover { background:rgb(var(--c-forest-tint)); }
+.ops-note { display:flex; gap:10px; align-items:flex-start; padding:14px 18px; border:1px solid #d4e6df; background:#edf6f2; border-radius:10px; font-size:13px; color:#3b5c4f; }
+.ops-note svg { flex-shrink:0; margin-top:2px; }
+.ops-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+.ops-metrics > div { padding:20px; border:1px solid rgb(var(--c-line)); background:white; border-radius:12px; }
+.ops-metric-note { display:block; margin-top:10px; font-size:11px; color:rgb(var(--c-muted)); }
+.ops-text-link { display:inline-flex; gap:6px; align-items:center; font-size:12px; font-weight:600; color:rgb(var(--c-forest)); }
+.ops-text-link:hover { text-decoration:underline; }
+.ops-dot { display:inline-block; width:7px; height:7px; margin-right:5px; border-radius:50%; }
+.ops-station-card { text-align:left; min-width:0; border:1px solid rgb(var(--c-line)); border-radius:8px; padding:10px; background:white; font-size:12px; transition:background .15s; }
+.ops-station-card:hover,.ops-station-card.is-selected { border-color:rgb(var(--c-forest)); background:rgb(var(--c-forest-tint)); }
+.ops-fill-track { display:block; height:5px; margin-top:10px; background:#e9efec; overflow:hidden; border-radius:4px; }
+.ops-fill-track > span { display:block; height:100%; border-radius:4px; }
+.ops-data-list > div { display:flex; justify-content:space-between; gap:16px; padding:10px 0; border-bottom:1px solid rgb(var(--c-line)); font-size:13px; }
+.ops-data-list dt { color:rgb(var(--c-muted)); }
+.ops-data-list dd { font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
+@media(max-width:700px) { .ops-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .ops-metrics > div { padding:14px; } }
+
 /* RE visual language: an engineering product, not an eco campaign.
    Warm paper ground, charcoal type, forest green for actions, lime only as a small accent
    for "accepted" moments, amber for collection warnings, red for stopped or faulted equipment,

@@ -13,6 +13,8 @@ import { PageHeader, Panel } from './shared';
 import { RouteRoadMap } from './RouteRoadMap';
 import { useRoadMetric } from '../../lib/roadHooks';
 import { ProviderNote } from '../driver/shared';
+import { driverItinerary } from '../../domain/itinerary';
+import { offerFile } from './shared';
 
 function Capacity({ label, used, max, unit }: { label: string; used: number; max: number; unit: string }) {
   const p = max > 0 ? Math.min(100, (used / max) * 100) : 0;
@@ -36,6 +38,8 @@ function ActiveRoute({ route }: { route: AssignedRoute }) {
   const state = useAppState();
   const store = useStore();
   const [cancel, setCancel] = useState(false);
+  const [share, setShare] = useState(false);
+  const itinerary = driverItinerary(state, route);
   const done = route.stops.filter((s) => s.status === 'done').length;
   return (
     <Panel
@@ -86,6 +90,7 @@ function ActiveRoute({ route }: { route: AssignedRoute }) {
             <a href="#driver" className="btn btn-primary btn-sm">
               <Icon name="phone" size={16} /> Mở màn hình tài xế
             </a>
+            <Button size="sm" icon="link" onClick={() => setShare(true)}>Chia sẻ lộ trình</Button>
             {route.status === 'assigned' && (
               <Button size="sm" variant="ghost" onClick={() => setCancel(true)}>
                 Hủy tuyến
@@ -100,6 +105,15 @@ function ActiveRoute({ route }: { route: AssignedRoute }) {
           className="h-[300px]"
         />
       </div>
+      <Dialog open={share} onClose={() => setShare(false)} title={`Chia sẻ lộ trình ${route.id}`} footer={<>
+        <Button icon="download" onClick={() => offerFile(`${route.id}-lo-trinh.txt`,itinerary,'text/plain')}>Tải lộ trình</Button>
+        <Button variant="primary" onClick={async () => {
+          try {
+            if (navigator.share) await navigator.share({ title:`Lộ trình ${route.id}`,text:itinerary });
+            else { await navigator.clipboard.writeText(itinerary); toast('Đã sao chép. Dán lộ trình vào tin nhắn cho tài xế.'); }
+          } catch (e) { if ((e as Error).name !== 'AbortError') toast('Không chia sẻ được. Chọn Tải lộ trình để lưu tệp.', 'warn'); }
+        }}>{typeof navigator.share === 'function' ? 'Chọn ứng dụng để gửi' : 'Sao chép lộ trình'}</Button>
+      </>}><p className="mb-3 text-sm text-muted">Gửi danh sách trạm, giờ đến dự kiến và liên kết vị trí qua ứng dụng nhắn tin trên điện thoại. Bản chia sẻ không đồng bộ trạng thái thay thùng.</p><label htmlFor="driver-itinerary" className="field-label">Nội dung gửi tài xế</label><textarea id="driver-itinerary" readOnly value={itinerary} className="input h-72 py-3 text-xs"/></Dialog>
       <Dialog
         open={cancel}
         onClose={() => setCancel(false)}
@@ -191,7 +205,7 @@ export function Routes() {
   const config = (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-2 gap-3">
-        <NumberField id="rt-payload" label="Tải trọng xe" unit="kg" value={cfg.payloadKg} min={0} max={5000} step={1} onChange={(v) => set('payloadKg', v)} />
+        <NumberField id="rt-payload" label="Tải trọng xe" unit="kg" value={cfg.payloadKg} min={1} max={1000} step={1} onChange={(v) => set('payloadKg', v)} hint="Xe tải nhỏ, tối đa 1 tấn" />
         <NumberField id="rt-volume" label="Thể tích thùng xe" unit="m³" value={cfg.cargoVolumeM3} min={0} max={20} step={0.01} onChange={(v) => set('cargoVolumeM3', v)} hint={`Chở được ${maxBins} thùng 0,24 m³`} />
         <div className="min-w-0">
           <label htmlFor="rt-dep" className="field-label">
@@ -218,6 +232,12 @@ export function Routes() {
           hint={plan.metric === 'road' ? 'Không dùng: thời gian lấy từ dữ liệu đường' : 'Dùng khi chưa có dữ liệu đường'}
         />
       </div>
+      <Segmented name="rt-objective" label="Ưu tiên tối ưu" value={cfg.objective ?? 'distance'} onChange={v => set('objective', v)} options={[{ value:'distance',label:'Ít km nhất' },{ value:'duration',label:'Ít thời gian nhất' }]}/>
+      <div className="border-t border-line pt-4">
+        <Switch id="rt-bans" label="Áp dụng khung giờ cấm xe" hint="Tự nhập theo khu vực đang vận hành" checked={!!cfg.drivingBans?.length} onChange={on => set('drivingBans', on ? [{ start:'06:00',end:'09:00' }] : [])}/>
+        {cfg.drivingBans?.map((ban, i) => <div key={i} className="mt-3 grid grid-cols-[1fr_1fr_auto] items-end gap-2"><div><label htmlFor={`ban-start-${i}`} className="field-label">Cấm từ</label><input id={`ban-start-${i}`} type="time" className="input" value={ban.start} onChange={e => set('drivingBans', cfg.drivingBans!.map((b,j) => j === i ? { ...b,start:e.target.value } : b))}/></div><div><label htmlFor={`ban-end-${i}`} className="field-label">Đến</label><input id={`ban-end-${i}`} type="time" className="input" value={ban.end} onChange={e => set('drivingBans', cfg.drivingBans!.map((b,j) => j === i ? { ...b,end:e.target.value } : b))}/></div><Button variant="ghost" onClick={() => set('drivingBans', cfg.drivingBans!.filter((_,j) => j !== i))} aria-label={`Xóa khung cấm ${i + 1}`}>×</Button></div>)}
+        {!!cfg.drivingBans?.length && <><Button size="sm" variant="ghost" onClick={() => set('drivingBans', [...cfg.drivingBans!, { start:'16:00',end:'19:00' }])}>Thêm khung giờ</Button><p className="mt-2 text-xs text-muted">Giờ minh họa, cần chỉnh theo khu vực. Mọi chặng, kể cả về điểm cuối, phải đi ngoài khung cấm; xe chờ tại điểm xuất phát của chặng.</p></>}
+      </div>
       <div className="grid grid-cols-2 gap-3 border-t border-line pt-4">
         <NumberField id="rt-thr" label="Ngưỡng thu gom" unit="%" value={cfg.thresholdPct} min={1} max={95} step={1} onChange={(v) => set('thresholdPct', v)} />
         <NumberField id="rt-next" label="Chuyến kế tiếp sau" unit="giờ" value={cfg.nextHours} min={0} max={72} step={1} onChange={(v) => set('nextHours', v)} />
@@ -235,11 +255,12 @@ export function Routes() {
         value={cfg.endAt}
         onChange={(v) => set('endAt', v)}
         options={[
-          { value: PARTNER, label: 'Đối tác tiếp nhận' },
+          { value: PARTNER, label: 'Container xử lý' },
           { value: DEPOT, label: 'Kho RE' },
         ]}
       />
       <p className="text-xs text-muted">{r.forecastNote(cfg.nextHours)} Khung giờ vào trạm sửa trong Cài đặt.</p>
+      <p className="text-xs text-muted">Kịch bản nhu cầu ×{cfg.demandMultiplier ?? 1}. <a href="#hub-forecasts" className="text-forest underline">Đổi trong Dự báo mức đầy</a>.</p>
     </div>
   );
 
@@ -263,12 +284,7 @@ export function Routes() {
       ) : (
         <div className="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
           <div className="min-w-0">
-            <div className="hidden xl:block">
-              <Panel title="Xe, ca và quy tắc">{config}</Panel>
-            </div>
-            <div className="xl:hidden">
-              <Disclosure summary="Xe, ca và quy tắc chọn trạm">{config}</Disclosure>
-            </div>
+            <Disclosure summary="Xe, ca và quy tắc chọn trạm" defaultOpen>{config}</Disclosure>
           </div>
 
           <div className="flex min-w-0 flex-col gap-5">
@@ -289,7 +305,7 @@ export function Routes() {
                 )}
               </Alert>
             ) : (
-              <Alert tone="info" title="Không có trạm cần thu gom" live>
+              <Alert tone={plan.feasible ? 'info' : 'warn'} title={plan.feasible ? 'Không có trạm cần thu gom' : 'Chưa thể lập tuyến'} live>
                 {plan.issues.filter((i) => i !== 'no_stops').map(issueText).join(' ') || 'Không trạm nào đạt ngưỡng hoặc dự báo đạt ngưỡng trước chuyến kế tiếp.'}
               </Alert>
             )}
@@ -321,6 +337,7 @@ export function Routes() {
                         <Capacity label="Tải trọng (ước tính)" used={plan.planned.collectedKg} max={cfg.payloadKg} unit="kg" />
                         <Capacity label="Thùng trên xe" used={plan.selected.length} max={maxBins} unit="thùng" />
                       </div>
+                      {plan.planned.banWaitMin > 0 && <p className="mt-3 text-xs text-amber-ink">Chờ hết giờ cấm: {n0(plan.planned.banWaitMin)} phút (đã tính vào thời gian tuyến).</p>}
                       <ol className="mt-5 flex flex-col">
                         <li className="flex items-center gap-3 pb-2 text-sm text-muted">
                           <span className="grid h-6 w-6 place-items-center rounded-sm bg-ink text-paper">
@@ -372,10 +389,10 @@ export function Routes() {
                     </div>
                   </div>
                   <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-4">
-                    <Button variant="primary" icon="truck" onClick={assign}>
+                    <Button variant="primary" icon="truck" onClick={assign} disabled={!plan.feasible || road.loading}>
                       {route?.status === 'assigned' ? `Thay ${route.id} bằng tuyến này` : 'Giao tuyến cho tài xế'}
                     </Button>
-                    <span className="text-xs text-muted">Tài xế nhận tuyến trên điện thoại và xác nhận từng lần thay thùng.</span>
+                    <span className="text-xs text-muted">{!plan.feasible ? 'Điều chỉnh các xung đột trước khi giao tuyến.' : 'Tuyến xuất hiện trong màn hình Tài xế trên trình duyệt này. Chưa có gửi SMS hoặc đồng bộ thiết bị.'}</span>
                   </div>
                 </Panel>
 
@@ -403,7 +420,7 @@ export function Routes() {
                     )}
                   </Panel>
                   <Panel title="So với thứ tự cố định">
-                    <Compare planned={plan.planned} baseline={plan.baseline} byTime={plan.metric !== 'mock'} />
+                    <Compare planned={plan.planned} baseline={plan.baseline} byTime={cfg.objective === 'duration'} />
                   </Panel>
                 </div>
               </>

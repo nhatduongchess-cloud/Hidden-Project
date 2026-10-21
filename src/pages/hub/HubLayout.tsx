@@ -12,13 +12,18 @@ import { Routes } from './Routes';
 import { Transactions } from './Transactions';
 import { Trace } from './Trace';
 import { HubSettings } from './Settings';
+import { Analytics, Kpis } from './Analytics';
+import { Forecasts } from './Forecasts';
 
 const NAV: { name: RouteName; href: string; label: string; icon: IconName; brand?: boolean }[] = [
   { name: 'hub', href: '#hub', label: 'Tổng quan', icon: 'grid' },
   { name: 'hub-stations', href: '#hub-stations', label: 'Trạm thu gom', icon: 'station' },
+  { name: 'hub-analytics', href: '#hub-analytics', label: 'Số lượng thu gom', icon: 'bottle', brand: true },
+  { name: 'hub-forecasts', href: '#hub-forecasts', label: 'Dự báo mức đầy', icon: 'clock' },
   { name: 'hub-routes', href: '#hub-routes', label: 'Tuyến thu gom', icon: 'route' },
+  { name: 'hub-kpis', href: '#hub-kpis', label: 'Hiệu quả vận hành', icon: 'sliders' },
   { name: 'hub-transactions', href: '#hub-transactions', label: 'Giao dịch', icon: 'list', brand: true },
-  { name: 'hub-trace', href: '#hub-trace', label: 'Truy xuất & báo cáo', icon: 'layers', brand: true },
+  { name: 'hub-trace', href: '#hub-trace', label: 'Truy xuất & báo cáo EPR', icon: 'layers', brand: true },
   { name: 'hub-settings', href: '#hub-settings', label: 'Cài đặt', icon: 'settings' },
 ];
 
@@ -56,7 +61,7 @@ function RoleSwitch() {
         value={state.role}
         onChange={(v) => {
           store.dispatch({ type: 'SET_ROLE', role: v });
-          if (v === 'brand' && !['hub-transactions', 'hub-trace'].some((n) => location.hash.startsWith(`#${n}`))) location.hash = 'hub-trace';
+          if (v === 'brand' && !['hub-transactions', 'hub-trace', 'hub-analytics'].some((n) => location.hash.startsWith(`#${n}`))) location.hash = 'hub-trace';
         }}
         options={[
           { value: 'operator', label: 'Vận hành' },
@@ -185,9 +190,12 @@ function BrandOnly() {
 function Page({ route }: { route: Route }) {
   const state = useAppState();
   const brand = state.role === 'brand';
-  const brandOk = route.name === 'hub-transactions' || route.name === 'hub-trace';
+  const brandOk = route.name === 'hub-transactions' || route.name === 'hub-trace' || route.name === 'hub-analytics';
   if (brand && !brandOk) return <BrandOnly />;
   switch (route.name) {
+    case 'hub-analytics': return <Analytics />;
+    case 'hub-forecasts': return <Forecasts />;
+    case 'hub-kpis': return <Kpis />;
     case 'hub-stations':
       return <StationsList />;
     case 'hub-station':
@@ -239,7 +247,9 @@ export function HubLayout({ route }: { route: Route }) {
           <div className="px-2 pb-5">
             <Brand />
           </div>
+          <p className="px-3 pb-3 text-[10px] font-semibold uppercase tracking-[.16em] text-muted">Điều hành thu gom</p>
           <NavList route={route} />
+          <a href="#driver" className="ops-driver-link"><Icon name="truck" size={20}/><span>Màn hình tài xế<small>Tuyến đường & thay thùng</small></span><Icon name="chevronRight" size={15}/></a>
           <div className="mt-auto border-t border-line px-1 pt-4">
             <RoleSwitch />
           </div>
@@ -287,5 +297,5 @@ export function HubLayout({ route }: { route: Route }) {
     );
   }
 
-  return <HubFilterProvider>{shell}</HubFilterProvider>;
+  return <HubFilterProvider><div className="ops-shell">{shell}</div></HubFilterProvider>;
 }

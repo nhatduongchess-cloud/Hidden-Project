@@ -25,6 +25,9 @@ export type RouteName =
   | 'hub-stations'
   | 'hub-station'
   | 'hub-routes'
+  | 'hub-analytics'
+  | 'hub-forecasts'
+  | 'hub-kpis'
   | 'hub-transactions'
   | 'hub-trace'
   | 'hub-settings';
@@ -50,6 +53,9 @@ const SIMPLE: RouteName[] = [
   'hub',
   'hub-stations',
   'hub-routes',
+  'hub-analytics',
+  'hub-forecasts',
+  'hub-kpis',
   'hub-transactions',
   'hub-trace',
   'hub-settings',

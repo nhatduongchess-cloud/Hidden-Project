@@ -31,7 +31,7 @@ export function DailyBars({ data, label, unit = 'kg' }: { data: { day: number; k
               <rect x={x} y={y(d.kg)} width={bw * 0.64} height={Math.max(0, y(0) - y(d.kg))} fill={last ? 'rgb(var(--c-forest))' : 'rgb(var(--c-forest) / 0.45)'} rx={1.5}>
                 <title>{`${date.getDate()}/${date.getMonth() + 1}: ${n1(d.kg)} ${unit}`}</title>
               </rect>
-              {(i % 2 === 1 || data.length <= 8 || last) && (
+              {(i % Math.max(1, Math.ceil(data.length / 8)) === 0 || last) && (
                 <text x={x + bw * 0.32} y={Hh - 10} textAnchor="middle" fontSize={10} fill="rgb(var(--c-muted))" fontFamily="JetBrains Mono, monospace">
                   {`${date.getDate()}/${date.getMonth() + 1}`}
                 </text>

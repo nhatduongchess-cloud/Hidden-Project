@@ -36,15 +36,19 @@ synced, so an offline station's deposits appear there only after reconnection.
 
 ## Run it
 
+The October 2026 operations update adds a road-map dashboard, historical fill forecasts,
+collection analytics, operating KPIs, constrained dispatch and portable driver itineraries.
+See [OPERATIONS.md](OPERATIONS.md) for behavior, solver limits and validation details.
+
 Node 18 or later (tested on Node 22).
 
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 91 unit tests (Vitest)
+npm test             # domain and forecast tests (Vitest)
 npm run build        # type-check + static site in dist/
 npm run preview      # serve dist/ on http://localhost:4173
-npm run test:e2e     # 36 Playwright browser tests against the production build (map services stubbed)
+npm run test:e2e     # Playwright browser tests against the production build (map services stubbed)
 npm run build:single # one self-contained HTML file in dist-single/index.html
 ```
 
@@ -111,8 +115,8 @@ e2e/           Playwright critical paths
 | Station events | Demo control panel | `TelemetrySource` (4G upload, idempotent by record id) |
 | Bottle recognition | Rule-based fusion of chosen camera class, confidence, barcode, weight | On-station model and barcode catalogue |
 | Fill level | Accepted mass ÷ bin volume × compacted-PET density | Two ultrasonic sensors |
-| Map | OpenStreetMap community tiles (OpenStreetMap France, then openstreetmap.org, then OpenStreetMap Deutschland); illustrative station coordinates in 10 cities, editable in RE Hub → Cài đặt. RE Hub's overview keeps a campus schematic | Real station locations after a site survey |
-| Routing | Real road routing from public Valhalla (truck) / OSRM (car) demo servers; straight-line estimate if both fail. No traffic or time-of-day truck bans | A self-hosted Valhalla/OSRM server; a CVRPTW solver for larger fleets |
+| Map | OpenStreetMap community tiles with illustrative station coordinates in 10 cities, editable in RE Hub → Cài đặt; overview now also uses the road map | Real station locations after a site survey |
+| Routing | Public Valhalla (truck) / OSRM (car), labelled straight-line fallback, operator-entered driving bans with waiting; no live traffic | Self-hosted road service and a multi-vehicle CVRPTW solver |
 | Truck position | Simulated driving along the route, or the phone's GPS when the driver allows it | Vehicle telematics |
 | Data | Browser localStorage | `DataRepository` |
 | Roles | Operator / brand switch, not authentication | `AuthProvider` |
@@ -137,8 +141,9 @@ zone, with a phone-navigation interface, and RE Hub plans the best visiting orde
   30 m opens the bin-swap confirmation.
 - **Best route** (RE Hub → Tuyến thu gom). The planner's distance matrix is now the road travel-time
   matrix between the depot, every station and the receiving partner. It tries every visiting order up
-  to 7 stops and keeps the fastest feasible one (capacity, access windows, shift end); the comparison
-  with the fixed order reports driving time. The planned route and the comparison are drawn on the map.
+  to 7 selected stops and keeps the best feasible one for the chosen distance/time objective (capacity,
+  full service within access windows, shift end and entered driving bans). The comparison with the
+  fixed order reports the selected objective. Both routes are drawn on the map.
 - **Routing sources, in order**: Valhalla on `valhalla1.openstreetmap.de` with the truck costing
   (2.5 m high, 2.8 t, so one-way streets, turn restrictions and tagged truck limits apply), then OSRM on
   `router.project-osrm.org` (car profile), then a straight line × 1.35 at 20 km/h. Every time, line
@@ -157,7 +162,8 @@ zone, with a phone-navigation interface, and RE Hub plans the best visiting orde
   OpenStreetMap data carries, which the prototype does not control.
 - **What leaves the browser**: map tile requests, and the coordinates of stations, depot, partner and
   truck sent to the routing servers. No transactions, users or station readings.
-- **Not modelled**: live traffic, time-of-day truck bans in city centres, parking at the station.
+- **Not modelled**: live traffic, automatic geographic truck-ban lookup, parking at the station.
+  Operator-entered time bans are now applied conservatively to all legs.
 - **Locations across Viet Nam**: "Trạm gần bạn" in the website header (or the "Khu vực minh họa" menu on
   the driver map and in RE Hub → Cài đặt) moves the three stations, depot, receiving point and zone to one
   of 10 cities: Hà Nội, Hải Phòng, Vinh, Huế, Đà Nẵng, Quy Nhơn, Nha Trang, Đà Lạt, TP. Hồ Chí Minh

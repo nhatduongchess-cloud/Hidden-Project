@@ -41,7 +41,7 @@ export const MOCK_METRIC: Metric = {
   minutes: (a, b, cfg) => (dist(a, b) / cfg.speedKmh) * 60,
 };
 
-/** Build a metric from a square matrix over `ids` (seconds and metres). Missing cells fall back to the mock. */
+/** Missing road cells are unreachable, never silently replaced with fictitious road distances. */
 export function matrixMetric(ids: string[], durationsS: (number | null)[][], distancesM: (number | null)[][], source: 'road' | 'estimate' = 'road'): Metric {
   const ix = new Map(ids.map((id, i) => [id, i]));
   const cell = <T,>(m: (T | null)[][], a: string, b: string): T | null => {
@@ -51,12 +51,12 @@ export function matrixMetric(ids: string[], durationsS: (number | null)[][], dis
   };
   return {
     source,
-    km: (a, b) => (a === b ? 0 : (cell(distancesM, a, b) ?? dist(a, b) * 1000) / 1000),
+    km: (a, b) => (a === b ? 0 : (cell(distancesM, a, b) ?? (source === 'road' ? Infinity : dist(a, b) * 1000)) / 1000),
     // A straight-line estimate has no real travel times: it uses the planner's average speed.
     minutes: (a, b, cfg) => {
       if (a === b) return 0;
       const d = cell(durationsS, a, b);
-      if (source === 'road' && d != null) return d / 60;
+      if (source === 'road') return d != null ? d / 60 : Infinity;
       const m = cell(distancesM, a, b);
       return ((m != null ? m / 1000 : dist(a, b)) / cfg.speedKmh) * 60;
     },
@@ -73,6 +73,9 @@ export interface PlanStationInput {
 }
 
 export interface PlanConfig {
+  objective?: 'distance' | 'duration';
+  /** Operator-supplied driving bans, applied conservatively to every leg. No legal defaults. */
+  drivingBans?: AccessWindow[];
   departure: string; // HH:MM
   shiftEnd: string; // HH:MM, must return by then
   payloadKg: number;
@@ -109,6 +112,7 @@ export interface StopEval {
 }
 
 export interface RouteEval {
+  banWaitMin: number;
   order: string[];
   stops: StopEval[];
   distanceKm: number;
@@ -155,17 +159,29 @@ export function evaluate(order: string[], stations: Map<string, PlanStationInput
   let kg = 0;
   const stops: StopEval[] = [];
   const violations: string[] = [];
+  let banWaitMin = 0;
+  // A leg must fit completely outside a ban; wait before departing, including the final leg.
+  const bans = (cfg.drivingBans ?? []).flatMap(w => {
+    const start = toMin(w.start), end = toMin(w.end);
+    return end > start ? [[start, end]] : [[0, end], [start, 1440]];
+  }).sort((a, b) => a[0] - b[0]);
+  const travel = (minutes: number) => {
+    for (const [start, end] of bans) {
+      if (minutes > 0 && t < end && t + minutes > start) { banWaitMin += end - t; t = end; }
+    }
+    t += minutes;
+  };
   for (const id of order) {
     const st = stations.get(id)!;
     const leg = metric.km(at, id);
     km += leg;
-    t += metric.minutes(at, id, cfg);
+    travel(metric.minutes(at, id, cfg));
     const open = toMin(st.window.start);
     const close = toMin(st.window.end);
     const wait = Math.max(0, open - t);
     const arrive = t;
     t += wait;
-    const late = t > close;
+    const late = t + cfg.serviceMin > close;
     if (late) violations.push(`window:${id}`);
     t += cfg.serviceMin;
     kg += st.massKg;
@@ -173,11 +189,13 @@ export function evaluate(order: string[], stations: Map<string, PlanStationInput
     at = id;
   }
   km += metric.km(at, cfg.endAt);
-  t += metric.minutes(at, cfg.endAt, cfg);
+  travel(metric.minutes(at, cfg.endAt, cfg));
+  if (!Number.isFinite(t) || !Number.isFinite(km)) violations.push('unreachable');
   if (t > toMin(cfg.shiftEnd)) violations.push('shift_end');
   if (kg > cfg.payloadKg) violations.push('payload');
   if (order.length * cfg.binVolumeM3 > cfg.cargoVolumeM3 + 1e-9) violations.push('volume');
   return {
+    banWaitMin,
     order,
     stops,
     distanceKm: km,
@@ -203,7 +221,7 @@ function nearestNeighbour(ids: string[], cfg: PlanConfig, metric: Metric): strin
   const out: string[] = [];
   let at = DEPOT;
   while (left.size) {
-    let best = '';
+    let best = left.values().next().value!;
     let bd = Infinity;
     for (const id of left) {
       const d = metric.minutes(at, id, cfg);
@@ -217,10 +235,10 @@ function nearestNeighbour(ids: string[], cfg: PlanConfig, metric: Metric): strin
 }
 
 /** Fewer violations first; then, with road data, less driving time (the fastest route), else less distance. */
-function better(a: RouteEval, b: RouteEval | null, metric: Metric): boolean {
+function better(a: RouteEval, b: RouteEval | null, metric: Metric, cfg: PlanConfig): boolean {
   if (!b) return true;
   if (a.violations.length !== b.violations.length) return a.violations.length < b.violations.length;
-  if (metric.source !== 'mock' && Math.abs(a.durationMin - b.durationMin) > 1e-6) return a.durationMin < b.durationMin;
+  if ((cfg.objective === 'duration' || (!cfg.objective && metric.source !== 'mock')) && Math.abs(a.durationMin - b.durationMin) > 1e-6) return a.durationMin < b.durationMin;
   return a.distanceKm < b.distanceKm - 1e-9;
 }
 
@@ -229,7 +247,7 @@ function bestOrder(ids: string[], stations: Map<string, PlanStationInput>, cfg: 
   let best: RouteEval | null = null;
   for (const o of orders) {
     const e = evaluate(o, stations, cfg, metric);
-    if (better(e, best, metric)) best = e;
+    if (better(e, best, metric, cfg)) best = e;
   }
   return best!;
 }
@@ -240,6 +258,13 @@ export function planRoute(input: PlanStationInput[], cfg: PlanConfig, metric: Me
   const stations = new Map(input.map((s) => [s.id, s]));
   const candidates = input.map((s) => classify(s, cfg)).sort((a, b) => RANK[a.cls] - RANK[b.cls] || b.st.currentPct - a.st.currentPct);
   const issues: string[] = [];
+  const validTime = (s: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
+  if (![cfg.payloadKg, cfg.cargoVolumeM3, cfg.binVolumeM3, cfg.speedKmh].every(n => Number.isFinite(n) && n > 0)
+    || cfg.payloadKg > 1000 || !Number.isFinite(cfg.serviceMin) || cfg.serviceMin < 0
+    || !validTime(cfg.departure) || !validTime(cfg.shiftEnd) || toMin(cfg.shiftEnd) <= toMin(cfg.departure)
+    || (cfg.drivingBans ?? []).some(w => !validTime(w.start) || !validTime(w.end) || w.start === w.end)) {
+    return { metric: metric.source, candidates, selected: [], planned: null, baseline: null, feasible: false, issues: ['invalid_config'] };
+  }
 
   // Capacity selection: priority first, then required, then optional, each by fill descending.
   const maxBins = Math.floor((cfg.cargoVolumeM3 + 1e-9) / cfg.binVolumeM3);

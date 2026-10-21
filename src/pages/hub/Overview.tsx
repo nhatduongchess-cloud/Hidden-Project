@@ -8,11 +8,11 @@ import { ago, dateTime, kg, n0, n1 } from '../../lib/format';
 import { Icon, type IconName } from '../../components/icons';
 import { Badge, Button, DemoTag, EmptyState, EstimateTag, Metric } from '../../components/ui';
 import { DailyBars } from '../../components/charts';
+import { NetworkMap } from './NetworkMap';
 import {
   ATTN,
   FilterBar,
   MaintenanceDialog,
-  MapLegend,
   PageHeader,
   Panel,
   PERIODS,
@@ -20,7 +20,6 @@ import {
   ResolveDialog,
   ScheduleCollectionDialog,
   SEVERITY_STYLE,
-  StationMap,
   kindNeeds,
   logText,
   logTone,
@@ -158,7 +157,7 @@ export function Overview() {
   );
   const tot = totals(scoped);
   const pendingCount = state.transactions.filter((t) => t.sync === 'pending' && (f.stationId === 'all' || t.stationId === f.stationId)).length;
-  const days = Math.max(7, PERIODS.find((p) => p.value === f.period)!.days);
+  const days = PERIODS.find((p) => p.value === f.period)!.days;
   const series = dailySeries(
     state.transactions.filter((t) => t.sync === 'synced' && (f.stationId === 'all' || t.stationId === f.stationId)),
     days,
@@ -185,20 +184,21 @@ export function Overview() {
         title="Tổng quan"
         sub={
           <span className="inline-flex flex-wrap items-center gap-2">
-            Cập nhật {dateTime(now)} · 3 trạm thí điểm <DemoTag />
+            Điều hành mạng lưới · {state.stations.length} trạm minh họa · {dateTime(now)} <DemoTag />
           </span>
         }
-        actions={<FilterBar />}
+        actions={<a href="#hub-routes" className="btn btn-primary"><Icon name="route" size={17}/>Lập tuyến thu gom</a>}
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatusTile icon="checkCircle" value={accepting.length} label="Đang nhận chai" sub={accepting.map((o) => o.station.id).join(', ')} tone="forest" href="#hub-stations" />
-        <StatusTile icon="alert" value={needCollect.length} label="Cần thu gom (≥ 80 %)" sub={needCollect.map((o) => o.station.id).join(', ')} tone="amber" href="#hub-stations" />
+        <StatusTile icon="alert" value={needCollect.length} label={`Cần thu gom (≥ ${state.settings.warnPct} %)`} sub={needCollect.map((o) => o.station.id).join(', ')} tone="amber" href="#hub-routes" />
         <StatusTile icon="stop" value={faults.length} label="Lỗi, dừng xử lý" sub={faults.map((o) => o.station.id).join(', ')} tone="fault" href="#hub-stations" />
         <StatusTile icon="wifiOff" value={offline.length} label="Mất kết nối" sub={offline.map((o) => o.station.id).join(', ')} tone="slate" href="#hub-stations" />
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+        <Panel id="map-title" title="Bản đồ mạng lưới" actions={<a href="#hub-forecasts" className="ops-text-link">Xem dự báo <Icon name="arrowRight" size={14}/></a>} pad={false}><NetworkMap /></Panel>
         <Panel
           id="attn-title"
           title={
@@ -235,20 +235,13 @@ export function Overview() {
           )}
         </Panel>
 
-        <Panel id="map-title" title="Sơ đồ trạm" actions={<DemoTag>Minh họa</DemoTag>}>
-          <StationMap />
-          <div className="mt-3">
-            <MapLegend />
-          </div>
-          <p className="mt-2 text-xs text-muted">Vị trí không phải địa điểm thật. Chạm vào trạm để xem chi tiết.</p>
-        </Panel>
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
         <Panel
           id="trend-title"
           title={`Chai được nhận · ${PERIODS.find((p) => p.value === f.period)!.label.toLowerCase()}${f.stationId !== 'all' ? ` · ${f.stationId}` : ''}`}
-          actions={<DemoTag />}
+          actions={<FilterBar />}
         >
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Metric label="Chai được nhận" value={n0(tot.acceptedBottles)} unit="chai" />

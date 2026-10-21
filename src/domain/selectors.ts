@@ -1,5 +1,6 @@
 import type { AppState, Station, Transaction, Material, BrandId, Settings } from './types';
 import { binCapacityKg } from './constants';
+import { forecastStation } from './forecast';
 
 export type FillView = 'station' | 'hub';
 
@@ -51,22 +52,17 @@ export function canAcceptNext(state: AppState, station: Station): { ok: true } |
   return { ok: true };
 }
 
-/** Hours until the bin reaches `targetPct`, using the station's forecast rate assumption. 0 if already there. */
+/** Calendar hours to threshold using received history; assumptions only for sparse history. */
 export function hoursToPct(state: AppState, station: Station, targetPct: number, view: FillView = 'hub'): number | null {
-  const current = fillPct(state, station, view);
-  if (current >= targetPct) return 0;
-  const kgPerHour = (station.forecastRateBph * state.settings.avgBottleMassG) / 1000;
-  if (kgPerHour <= 0) return null;
-  const kgNeeded = ((targetPct - current) / 100) * binCapacityKg(state.settings);
-  return kgNeeded / kgPerHour;
+  const now = Date.now();
+  const f = forecastStation(state, station, now, 168, state.settings.demandMultiplier ?? 1, view);
+  if (f.currentPct >= targetPct) return 0;
+  const ts = targetPct === state.settings.warnPct ? f.reaches80At : targetPct === state.settings.stopPct ? f.reaches95At : f.points.find(p => p.pct >= targetPct)?.ts;
+  return ts == null ? null : (ts - now) / 3_600_000;
 }
 
 export function forecastPctAfter(state: AppState, station: Station, hours: number, view: FillView = 'hub'): number {
-  // A station stops accepting at the stop threshold, so the forecast cannot rise above it.
-  const current = fillPct(state, station, view);
-  if (current >= state.settings.stopPct) return current;
-  const kg = (station.forecastRateBph * state.settings.avgBottleMassG * hours) / 1000;
-  return Math.min(state.settings.stopPct, current + (kg / binCapacityKg(state.settings)) * 100);
+  return forecastStation(state, station, Date.now(), hours, state.settings.demandMultiplier ?? 1, view).points.at(-1)!.pct;
 }
 
 export interface TxFilters {
