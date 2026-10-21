@@ -140,7 +140,7 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 
 function markerHtml(m: MapMarker): string {
   if (m.kind === 'truck') {
-    return `<div class="re-truck"><div class="re-truck__rot"><svg viewBox="0 0 44 44" width="44" height="44" aria-hidden="true"><circle cx="22" cy="22" r="20" class="re-truck__halo"/><circle cx="22" cy="22" r="13" class="re-truck__disc"/><path d="M22 12.5l7 15-7-3.6-7 3.6z" class="re-truck__arrow"/></svg></div></div>`;
+    return `<div class="re-truck re-truck--${m.tone ?? 'default'}"><div class="re-truck__rot"><svg viewBox="0 0 44 44" width="44" height="44" aria-hidden="true"><circle cx="22" cy="22" r="20" class="re-truck__halo"/><circle cx="22" cy="22" r="13" class="re-truck__disc"/><path d="M22 12.5l7 15-7-3.6-7 3.6z" class="re-truck__arrow"/></svg></div>${m.label ? `<span class="re-truck__label">${esc(m.label)}</span>` : ''}</div>`;
   }
   if (m.kind === 'depot' || m.kind === 'partner') {
     const glyph =
@@ -343,6 +343,8 @@ export default function RoadMap({
         if (cur.marker.dragging) spec.draggable ? cur.marker.dragging.enable() : cur.marker.dragging.disable();
       }
       if (spec.kind === 'truck') {
+        const element = cur.marker.getElement();
+        if (element) { element.title = spec.title; element.setAttribute('aria-label', spec.title); }
         const rot = cur.marker.getElement()?.querySelector<HTMLElement>('.re-truck__rot');
         if (rot) rot.style.transform = `rotate(${Math.round(spec.heading ?? 0)}deg)`;
       }

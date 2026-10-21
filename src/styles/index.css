@@ -499,6 +499,10 @@ p {
 .re-truck__halo { fill: rgb(var(--c-route) / 0.18); }
 .re-truck__disc { fill: rgb(var(--c-route)); stroke: white; stroke-width: 3; }
 .re-truck__arrow { fill: white; }
+.re-truck--forest .re-truck__disc { fill: rgb(var(--c-forest)); }
+.re-truck--slate .re-truck__disc { fill: #697b79; }
+.re-truck--slate .re-truck__halo { fill: #697b7920; }
+.re-truck__label { position: absolute; left: 50%; top: 42px; transform: translateX(-50%); padding: 2px 6px; border: 1px solid #c7d5d0; border-radius: 4px; background: white; color: #243d33; font: 600 11px/16px sans-serif; white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
   *,

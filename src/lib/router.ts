@@ -20,11 +20,13 @@ export type RouteName =
   | 'driver'
   | 'driver-map'
   | 'driver-nav'
+  | 'driver-live'
   // RE Hub
   | 'hub'
   | 'hub-stations'
   | 'hub-station'
   | 'hub-routes'
+  | 'hub-fleet'
   | 'hub-analytics'
   | 'hub-forecasts'
   | 'hub-kpis'
@@ -50,9 +52,11 @@ const SIMPLE: RouteName[] = [
   'app-rewards',
   'driver',
   'driver-map',
+  'driver-live',
   'hub',
   'hub-stations',
   'hub-routes',
+  'hub-fleet',
   'hub-analytics',
   'hub-forecasts',
   'hub-kpis',
@@ -73,6 +77,7 @@ export function parseHash(hash: string): Route {
   if (h.startsWith('hub-station-')) return { name: 'hub-station', param: h.slice('hub-station-'.length) };
   if (h.startsWith('hub-trace-')) return { name: 'hub-trace', param: h.slice('hub-trace-'.length) };
   if (h.startsWith('driver-nav-')) return { name: 'driver-nav', param: h.slice('driver-nav-'.length) };
+  if (h.startsWith('driver-live-')) return { name: 'driver-live', param: h.slice('driver-live-'.length) };
   if (h.startsWith('explorer-')) return { name: 'explorer', param: h.slice('explorer-'.length) };
   if ((SIMPLE as string[]).includes(h)) return { name: h as RouteName };
   if (LEGACY[h]) return { name: LEGACY[h] };

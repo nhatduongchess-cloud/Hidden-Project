@@ -12,6 +12,7 @@ import { AppExperience } from './pages/app/AppExperience';
 import { DriverExperience } from './pages/driver/Driver';
 import { DriverMap } from './pages/driver/DriverMap';
 import { Navigation } from './pages/driver/Navigation';
+import { LiveDriver } from './pages/driver/LiveDriver';
 import { HubLayout } from './pages/hub/HubLayout';
 
 const EXPERIENCES: { id: Experience; label: string; short: string; href: string; icon: IconName }[] = [
@@ -23,13 +24,13 @@ const EXPERIENCES: { id: Experience; label: string; short: string; href: string;
 ];
 
 /** Prototype chrome: switches between the four experiences. Visually separate from the product UI. */
-function PrototypeBar({ current, onReset }: { current: Experience; onReset: () => void }) {
+function PrototypeBar({ current, onReset, liveFleet = false }: { current: Experience; onReset: () => void; liveFleet?: boolean }) {
   return (
     <div className="on-dark no-print sticky top-0 z-40 bg-ink text-paper" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       <div className="mx-auto flex h-11 max-w-[1440px] items-center gap-2 px-3 sm:gap-4 sm:px-4">
         <span className="hidden shrink-0 items-center gap-2 lg:flex">
           <span className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-paper/60">Bản mẫu tương tác</span>
-          <span className="rounded-sm border border-paper/25 px-1.5 py-px font-mono text-[10px] uppercase tracking-wider text-paper/80">Dữ liệu demo</span>
+          <span className="rounded-sm border border-paper/25 px-1.5 py-px font-mono text-[10px] uppercase tracking-wider text-paper/80">{liveFleet ? 'Trạm minh họa · GPS thiết bị' : 'Dữ liệu demo'}</span>
         </span>
         <nav aria-label="Chọn trải nghiệm" className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto scroll-thin lg:justify-center">
           {EXPERIENCES.map((e) => (
@@ -75,6 +76,8 @@ function routeTitle(r: Route): string {
     'app-rewards': 'Điểm thưởng · Ứng dụng RE',
     driver: 'Tuyến của tôi · Tài xế RE',
     'driver-map': 'Trạm gần nhất · Tài xế RE',
+    'driver-live': 'Chuyến được giao · Tài xế RE',
+    'hub-fleet': 'Đội xe trực tiếp · RE Hub',
     'driver-nav': `Dẫn đường tới ${r.param ?? ''} · Tài xế RE`,
     hub: 'Tổng quan · RE Hub',
     'hub-stations': 'Trạm thu gom · RE Hub',
@@ -116,7 +119,7 @@ export function App() {
       body = <AppExperience route={route} />;
       break;
     case 'driver':
-      body = route.name === 'driver-nav' ? <Navigation key={route.param} targetId={route.param ?? ''} /> : route.name === 'driver-map' ? <DriverMap /> : <DriverExperience />;
+      body = route.name === 'driver-live' ? <LiveDriver key={route.param} initialToken={route.param} /> : route.name === 'driver-nav' ? <Navigation key={route.param} targetId={route.param ?? ''} /> : route.name === 'driver-map' ? <DriverMap /> : <DriverExperience />;
       break;
     case 'hub':
       body = <HubLayout route={route} />;
@@ -131,7 +134,7 @@ export function App() {
       }}>
         Bỏ qua đến nội dung chính
       </a>
-      <PrototypeBar current={exp} onReset={() => setResetOpen(true)} />
+      <PrototypeBar current={exp} liveFleet={route.name === 'hub-fleet' || route.name === 'driver-live'} onReset={() => setResetOpen(true)} />
       {body}
       <Dialog
         open={resetOpen}

@@ -52,7 +52,7 @@ npm run test:e2e     # Playwright browser tests against the production build (ma
 npm run build:single # one self-contained HTML file in dist-single/index.html
 ```
 
-No API keys, accounts or backend are needed. The road map needs internet access to the public map
+The original browser demo needs no API keys, accounts or backend. The road map needs internet access to the public map
 services listed below; without it the app falls back to a labelled straight-line estimate.
 
 ## Published copy
@@ -185,3 +185,15 @@ screenshots, a video and `summary.json` (which routing service answered, the ran
 The video needs Playwright's ffmpeg (`npx playwright install ffmpeg`); set `LIVE_VIDEO=0` to skip it. Set `BASE_URL` to the published address to run the same check against a deployed copy, and `LIVE_AREA=hn,dn,ct` to run it once per city (output in `<folder>/<city id>`; add `--workers=1` to go easy on the free routing server). `summary.json` also lists which tile servers answered.
 
 See `WALKTHROUGH.md` for a three-minute demo script.
+
+## Multi-vehicle optimization and live GPS
+
+Open **RE Hub → Đội xe trực tiếp** (`#hub-fleet`) to plan with the Python OR-Tools service.
+Each vehicle has its own payload, cargo volume and shift. Dispatch creates a private driver
+link; the phone can explicitly enable GPS and report pickup progress. RE Hub receives shared
+updates through authenticated WebSockets. SQLite stores the plan and latest position.
+
+Run `powershell -ExecutionPolicy Bypass -File server/run.ps1` in a second terminal alongside
+`npm run dev`. This requires Python 3.12. The static GitHub Pages demo cannot run this backend;
+phones need a shared HTTPS deployment. See [the service guide](server/README.md) for the complete
+workflow, limits, security, deployment and tests (`npm run test:fleet`).

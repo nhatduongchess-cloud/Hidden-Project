@@ -40,15 +40,22 @@ experience remain available from the top navigation.
 
 ## Solver boundary
 
-This is a single-vehicle browser planner, **not an OR-Tools multi-vehicle service**.
+The original `#hub-routes` screen is a single-vehicle browser planner.
 Selection is greedy by urgency/capacity, then all visiting orders are searched for up to
 7 selected stops. Above 7 stops it uses nearest-neighbour. It does not claim global optimality.
 The optional driving bans conservatively apply to every leg; they are not a legal database
 of geographic road restrictions. Community road providers still supply the road distances.
 
-All operational records, recognition and station positions remain illustrative. Production
-telemetry, deployed recognition, authentication, shared server storage, evidence uploads and
-fleet optimization need real integrations. The UI does not describe demo state as a live network.
+The new **Đội xe trực tiếp** screen (`#hub-fleet`) uses a Python OR-Tools multi-vehicle service
+with weight/volume capacities, service windows, shifts, operator-entered bans and a shared
+receiving endpoint. It persists dispatch and latest GPS in SQLite, broadcasts authenticated
+WebSocket snapshots, and gives each driver a revocable, vehicle-scoped link. See
+[server/README.md](server/README.md) for startup, security, deployment and solver details.
+
+Station records and recognition remain illustrative. GPS is explicitly enabled by the driver
+and comes from the device. Fleet pickup confirmations update shared progress; they do not
+create weigh tickets, reset demo bins, or enter verified EPR/KPI mass in the original local flow.
+Production station telemetry, recognition and shared evidence storage still need integrations.
 
 ## Verification
 

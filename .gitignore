@@ -6,3 +6,9 @@ playwright-report/
 .vercel/
 *.log
 .DS_Store
+.venv/
+__pycache__/
+.pytest_cache/
+server/data/
+.env
+.env.*

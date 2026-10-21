@@ -14,6 +14,7 @@ import { Trace } from './Trace';
 import { HubSettings } from './Settings';
 import { Analytics, Kpis } from './Analytics';
 import { Forecasts } from './Forecasts';
+import { Fleet } from './Fleet';
 
 const NAV: { name: RouteName; href: string; label: string; icon: IconName; brand?: boolean }[] = [
   { name: 'hub', href: '#hub', label: 'Tổng quan', icon: 'grid' },
@@ -21,6 +22,7 @@ const NAV: { name: RouteName; href: string; label: string; icon: IconName; brand
   { name: 'hub-analytics', href: '#hub-analytics', label: 'Số lượng thu gom', icon: 'bottle', brand: true },
   { name: 'hub-forecasts', href: '#hub-forecasts', label: 'Dự báo mức đầy', icon: 'clock' },
   { name: 'hub-routes', href: '#hub-routes', label: 'Tuyến thu gom', icon: 'route' },
+  { name: 'hub-fleet', href: '#hub-fleet', label: 'Đội xe trực tiếp', icon: 'truck' },
   { name: 'hub-kpis', href: '#hub-kpis', label: 'Hiệu quả vận hành', icon: 'sliders' },
   { name: 'hub-transactions', href: '#hub-transactions', label: 'Giao dịch', icon: 'list', brand: true },
   { name: 'hub-trace', href: '#hub-trace', label: 'Truy xuất & báo cáo EPR', icon: 'layers', brand: true },
@@ -193,6 +195,7 @@ function Page({ route }: { route: Route }) {
   const brandOk = route.name === 'hub-transactions' || route.name === 'hub-trace' || route.name === 'hub-analytics';
   if (brand && !brandOk) return <BrandOnly />;
   switch (route.name) {
+    case 'hub-fleet': return <Fleet />;
     case 'hub-analytics': return <Analytics />;
     case 'hub-forecasts': return <Forecasts />;
     case 'hub-kpis': return <Kpis />;
