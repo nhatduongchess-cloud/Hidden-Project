@@ -102,10 +102,10 @@ export function Trace({ batchId }: { batchId?: string }) {
 
   const reportArgs = (): ReportArgs => ({
     title: 'Tài liệu hỗ trợ báo cáo EPR',
-    period: range === 'all' ? `Toàn bộ dữ liệu demo đến ${dateOnly(now)}` : `${dateOnly(from)} → ${dateOnly(now)}`,
+    period: range === 'all' ? `Toàn bộ dữ liệu đến ${dateOnly(now)}` : `${dateOnly(from)} → ${dateOnly(now)}`,
     filters: describeFilters(scopeTx.f, state, t),
     units: 'Đơn vị: chai (chiếc), khối lượng (kg), tỷ lệ (%)',
-    disclaimer: 'Tài liệu hỗ trợ cho việc rà soát EPR. Không phải chứng nhận, hồ sơ đã được phê duyệt hay bằng chứng tuân thủ. Số liệu trong bản mẫu là dữ liệu demo.',
+    disclaimer: 'Tài liệu hỗ trợ cho việc rà soát EPR. Không phải chứng nhận, hồ sơ đã được phê duyệt hay bằng chứng tuân thủ. Số liệu trong báo cáo sử dụng dữ liệu mẫu.',
     generated: dateTime(now),
     totals: tot,
     stations: state.stations.map((s) => ({ id: s.id, ...totals(scopeTx.rows.filter((x) => x.stationId === s.id)) })),
@@ -117,7 +117,7 @@ export function Trace({ batchId }: { batchId?: string }) {
       measured: s.measuredKg,
       disc: s.discrepancyKg,
       discPct: s.discrepancyPct,
-      evidence: batchGaps(state, s.batch, now).map(gapText).join('; ') || 'Đủ tài liệu theo quy trình demo',
+      evidence: batchGaps(state, s.batch, now).map(gapText).join('; ') || 'Đã có các loại tài liệu yêu cầu',
       downstream: s.confirmedDownstreamKg,
     })),
     role: operator ? 'Đơn vị vận hành' : `Nhãn hàng: ${t.brand[brand]}`,
@@ -321,7 +321,7 @@ export function Trace({ batchId }: { batchId?: string }) {
       </Drawer>
       {batchId && !open && (
         <Alert tone="warn" className="mt-5" title={`Không tìm thấy lô ${batchId}`}>
-          Lô này không có trong dữ liệu demo hiện tại.
+          Không tìm thấy lô này trong danh sách hiện tại.
         </Alert>
       )}
     </>
@@ -388,7 +388,7 @@ function BatchDetail({ batch, sum }: { batch: Batch; sum: BatchSummary }) {
     const ev = {
       id: newId('EV'),
       kind,
-      label: file ? file.name : `${t.hub.trace.evKinds[kind]} (mẫu demo)`,
+      label: file ? file.name : `${t.hub.trace.evKinds[kind]} (tệp mẫu)`,
       fileName: file ? file.name : `${batch.id}-${kind}-mau.pdf`,
       ts: Date.now(),
       origin: 'attached' as const,
@@ -464,7 +464,7 @@ function BatchDetail({ batch, sum }: { batch: Batch; sum: BatchSummary }) {
           Bằng chứng còn thiếu
         </h3>
         {gaps.length === 0 ? (
-          <Alert tone="success" title="Đủ bằng chứng theo quy trình demo" />
+          <Alert tone="success" title="Đã có các loại tài liệu yêu cầu" />
         ) : (
           <ul className="flex flex-col gap-2">
             {gaps.map((g) => (
@@ -502,7 +502,7 @@ function BatchDetail({ batch, sum }: { batch: Batch; sum: BatchSummary }) {
                 >
                   Ghi cân
                 </Button>
-                <p className="text-xs text-muted sm:col-span-3">Giá trị gợi ý = 97 % ước tính, chỉ để demo. Nhập số trên phiếu cân thật.</p>
+                <p className="text-xs text-muted sm:col-span-3">Giá trị gợi ý được tính từ dữ liệu mẫu (97 % khối lượng ước tính). Khi vận hành, nhập số trên phiếu cân.</p>
               </div>
             ))}
           {batch.status === 'received' && (
@@ -522,7 +522,7 @@ function BatchDetail({ batch, sum }: { batch: Batch; sum: BatchSummary }) {
               <NumberField id="down-kg" label="Khối lượng bên tái chế xác nhận" unit="kg" value={downKg} min={0} max={100000} step={0.01} onChange={setDownKg} disabled={!sum.hasRecyclerDocument} />
               <Button
                 disabled={!sum.hasRecyclerDocument}
-                onClick={() => store.dispatch({ type: 'BATCH_RECORD_DOWNSTREAM', batchId: batch.id, confirmedKg: downKg, note: 'Ghi theo tài liệu bên tái chế (demo)', ts: Date.now() })}
+                onClick={() => store.dispatch({ type: 'BATCH_RECORD_DOWNSTREAM', batchId: batch.id, confirmedKg: downKg, note: 'Ghi theo tài liệu bên tái chế', ts: Date.now() })}
               >
                 Ghi kết quả hạ nguồn
               </Button>
@@ -547,7 +547,7 @@ function BatchDetail({ batch, sum }: { batch: Batch; sum: BatchSummary }) {
               Thêm tệp mẫu
             </Button>
           </div>
-          <p className="mt-2 text-xs text-muted">Tệp chỉ được ghi tên và dung lượng trong trình duyệt này. Không tải lên đâu cả.</p>
+          <p className="mt-2 text-xs text-muted">Tên và dung lượng tệp được lưu trên trình duyệt này. Nội dung tệp chưa được lưu lên máy chủ.</p>
         </section>
       )}
 
@@ -625,7 +625,7 @@ function BatchDetail({ batch, sum }: { batch: Batch; sum: BatchSummary }) {
               <span className="text-right text-xs text-muted">
                 <span className="tnum">{dateTime(e.ts)}</span>
                 <br />
-                {e.origin === 'generated' ? 'Do bản mẫu tạo' : 'Người vận hành đính kèm'}
+                {e.origin === 'generated' ? 'Tài liệu mẫu do hệ thống tạo' : 'Người vận hành đính kèm'}
               </span>
             </li>
           ))}

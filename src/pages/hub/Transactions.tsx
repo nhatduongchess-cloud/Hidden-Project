@@ -201,7 +201,7 @@ export function Transactions() {
       )}
 
       {operator && (
-        <Panel title="Điểm thưởng theo người dùng demo" className="mt-5" pad={false}>
+        <Panel title="Điểm thưởng theo người dùng" className="mt-5" pad={false}>
           <div className="overflow-x-auto">
             <table className="table-base min-w-[520px]">
               <thead>

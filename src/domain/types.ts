@@ -122,6 +122,8 @@ export interface Place {
 }
 
 export interface Settings {
+  /** Explicit planning scenario, not an inferred seasonal effect. */
+  demandMultiplier?: number;
   pointsPerBottle: number;
   avgBottleMassG: number;
   compactedDensityKgM3: number;

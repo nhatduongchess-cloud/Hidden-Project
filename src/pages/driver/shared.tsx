@@ -7,7 +7,7 @@ import type { ProviderId } from '../../domain/nav';
 import type { CollectTarget } from '../../domain/places';
 import { PROVIDER_LABEL } from '../../integrations/roadRouting';
 import { Icon, Wordmark, type IconName } from '../../components/icons';
-import { Badge, Button, DemoTag, Dialog, Spinner, toast, type Tone } from '../../components/ui';
+import { Badge, Button, Dialog, Spinner, toast, type Tone } from '../../components/ui';
 import type { MapMarker, MarkerTone } from '../../components/LazyRoadMap';
 import { kg, n0 } from '../../lib/format';
 
@@ -79,9 +79,9 @@ export function ProviderNote({ provider, loading, compact, className = '' }: { p
 
 export function DriverShell({ children, tab, routeId }: { children: ReactNode; tab: 'route' | 'map'; routeId?: string }) {
   return (
-    <main id="main" tabIndex={-1} className="min-h-[calc(100dvh-44px)] bg-sunk/60 outline-none md:py-6">
-      <div className="mx-auto min-h-[calc(100dvh-44px)] max-w-[480px] bg-paper md:min-h-0 md:rounded-lg md:border md:border-line md:shadow-2">
-        <header className="sticky top-11 z-10 border-b border-line bg-paper/95 md:rounded-t-lg">
+    <main id="main" tabIndex={-1} className="min-h-dvh bg-sunk/60 outline-none md:py-6">
+      <div className="mx-auto min-h-dvh max-w-[480px] bg-paper md:min-h-0 md:rounded-lg md:border md:border-line md:shadow-2">
+        <header className="sticky top-0 z-10 border-b border-line bg-paper/95 md:rounded-t-lg">
           <div className="flex min-h-[52px] items-center justify-between gap-3 px-4">
             <div className="flex items-center gap-2.5">
               <Wordmark size={22} />
@@ -90,7 +90,7 @@ export function DriverShell({ children, tab, routeId }: { children: ReactNode; t
             </div>
             <div className="flex items-center gap-2">
               {routeId && <span className="id-tag text-xs text-muted">{routeId}</span>}
-              <DemoTag>Dữ liệu demo</DemoTag>
+              <a href="#hub" className="text-xs font-medium text-forest-ink hover:underline">RE Hub</a>
             </div>
           </div>
           <nav aria-label="Màn hình tài xế" className="flex gap-1 px-3 pb-2">

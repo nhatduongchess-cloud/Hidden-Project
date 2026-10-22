@@ -444,7 +444,7 @@ export function StationMap({
       {BLOCKS.map((b) => (
         <g key={b.label}>
           <rect x={b.x} y={b.y} width={b.w} height={b.h} fill="rgb(var(--c-panel))" stroke="rgb(var(--c-line-strong))" strokeWidth="0.3" rx="0.8" />
-          <text x={b.x + 1.2} y={b.y + 3} fontSize="2.3" fill="rgb(var(--c-muted))" fontFamily="Be Vietnam Pro, sans-serif">
+          <text x={b.x + 1.2} y={b.y + 3} fontSize="2.3" fill="rgb(var(--c-muted))" fontFamily="Source Sans 3 Variable, sans-serif">
             {b.label}
           </text>
         </g>
@@ -463,7 +463,7 @@ export function StationMap({
               fontSize="2.6"
               textAnchor={id === PARTNER ? 'end' : 'start'}
               fill="rgb(var(--c-ink))"
-              fontFamily="Be Vietnam Pro, sans-serif"
+              fontFamily="Source Sans 3 Variable, sans-serif"
             >
               {id === PARTNER ? 'Đối tác tiếp nhận' : 'Kho RE'}
             </text>
@@ -479,7 +479,7 @@ export function StationMap({
             <g opacity={dim ? 0.55 : 1}>
             {selected === s.id && <circle cx={x} cy={y} r={7.5} fill="none" stroke="rgb(var(--c-ink))" strokeWidth="0.5" />}
             <Marker o={o} x={x} y={y} />
-            <g fontFamily="JetBrains Mono, monospace">
+            <g fontFamily="Source Sans 3 Variable, monospace">
               <rect x={x + 5} y={y - 3.6} width={idx !== undefined ? 22 : 18} height={7.2} rx="0.8" fill="rgb(var(--c-panel))" stroke="rgb(var(--c-line))" strokeWidth="0.25" />
               <text x={x + 6.2} y={y - 0.6} fontSize="2.5" fontWeight="700" fill="rgb(var(--c-ink))">
                 {idx !== undefined ? `${idx}. ` : ''}

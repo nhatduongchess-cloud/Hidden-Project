@@ -8,6 +8,8 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 // which is what the private Artifact preview is published from.
 export default defineConfig(({ mode }) => ({
   base: './',
+  server: { proxy: { '/api': { target: process.env.FLEET_API_TARGET || 'http://127.0.0.1:8000', ws: true } } },
+  preview: { proxy: { '/api': { target: process.env.FLEET_API_TARGET || 'http://127.0.0.1:8000', ws: true } } },
   plugins: mode === 'single' ? [react(), viteSingleFile()] : [react()],
   build: {
     outDir: mode === 'single' ? 'dist-single' : 'dist',

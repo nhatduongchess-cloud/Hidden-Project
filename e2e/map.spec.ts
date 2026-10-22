@@ -122,7 +122,7 @@ test('RE Hub plans on road travel times and shows the route on the map', async (
   await expect(page.getByText(/Tuyến khả thi/)).toBeVisible();
   await expect(page.getByRole('region', { name: 'Bản đồ tuyến đề xuất và tuyến đối chứng' })).toBeVisible();
   await expect(page.getByText(/Đường thực tế · Valhalla/).first()).toBeVisible();
-  await expect(page.getByText(/Thời gian và quãng đường giữa các điểm lấy từ dịch vụ định tuyến/)).toBeVisible();
+  await expect(page.getByText(/Dữ liệu đường từ OpenStreetMap qua dịch vụ công cộng/)).toBeVisible();
   await page.getByRole('button', { name: 'Giao tuyến cho tài xế' }).click();
   await page.goto('/#driver');
   await expect(page.getByRole('region', { name: /Bản đồ tuyến TU-/ })).toBeVisible();
