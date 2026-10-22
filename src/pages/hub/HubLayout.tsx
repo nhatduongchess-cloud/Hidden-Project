@@ -81,13 +81,13 @@ function RoleSwitch() {
           value={state.brandView}
           onChange={(v) => store.dispatch({ type: 'SET_ROLE', role: 'brand', brandView: v })}
           options={[
-            { value: 'BRAND_A', label: 'Nhãn hàng minh họa A' },
-            { value: 'BRAND_B', label: 'Nhãn hàng minh họa B' },
-            { value: 'BRAND_C', label: 'Nhãn hàng minh họa C' },
+            { value: 'BRAND_A', label: 'Nhãn hàng A' },
+            { value: 'BRAND_B', label: 'Nhãn hàng B' },
+            { value: 'BRAND_C', label: 'Nhãn hàng C' },
           ]}
         />
       )}
-      <p className="text-[11px] leading-snug text-muted">Dữ liệu trạm mẫu · <a href="#hub-settings" className="underline">Cấu hình</a></p>
+      <p className="text-[11px] leading-snug text-muted">Đang sử dụng dữ liệu mẫu · <a href="#hub-settings" className="underline">Cấu hình</a></p>
     </div>
   );
 }

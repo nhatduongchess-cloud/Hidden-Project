@@ -1,5 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import '@fontsource-variable/source-sans-3/wght.css';
+import '@fontsource-variable/manrope/wght.css';
 import './styles/index.css';
 import { App } from './App';
 import { StoreProvider } from './lib/store-context';

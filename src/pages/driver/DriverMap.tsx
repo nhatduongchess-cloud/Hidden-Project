@@ -130,7 +130,7 @@ export function DriverMap() {
                 variant="primary"
                 onClick={() => {
                   store.dispatch({ type: 'APPLY_AREA', areaId: switchTo.id, keepDriverPos: true });
-                  toast(`Đã chuyển trạm minh họa tới ${switchTo.city}.`);
+                  toast(`Đã chuyển dữ liệu trạm tới ${switchTo.city}.`);
                 }}
               >
                 Chuyển sang {switchTo.city}
@@ -139,10 +139,10 @@ export function DriverMap() {
           }
         >
           {switchTo
-            ? `Vị trí GPS ở gần khu vực minh họa ${switchTo.city}. Các trạm đang ở ${area.city}.`
+            ? `Vị trí GPS ở gần khu vực dữ liệu mẫu ${switchTo.city}. Các trạm đang ở ${area.city}.`
             : near.area.id === area.id
               ? `Các trạm ở ${area.city}. Bấm “Về bãi xe” để xem tuyến từ bãi.`
-              : `Chưa có khu vực minh họa gần vị trí GPS này. Các trạm đang ở ${area.city}; bấm “Về bãi xe” để xem tuyến từ bãi.`}
+              : `Chưa có khu vực dữ liệu mẫu gần vị trí GPS này. Các trạm đang ở ${area.city}; bấm “Về bãi xe” để xem tuyến từ bãi.`}
         </Alert>
       )}
 

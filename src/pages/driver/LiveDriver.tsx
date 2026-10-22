@@ -68,7 +68,7 @@ export function LiveDriver({ initialToken }: { initialToken?: string }) {
         </section>
       </>}
       {expired && <p className="card p-5 text-sm">Vị trí đã dừng gửi. Liên hệ điều phối viên để nhận liên kết mới.</p>}
-      <p className="text-center text-xs text-muted">GPS lấy từ thiết bị của bạn · dữ liệu trạm dùng cho thử nghiệm.</p>
+      <p className="text-center text-xs text-muted">GPS lấy từ thiết bị của bạn · trạm và khối lượng sử dụng dữ liệu mẫu.</p>
     </div>
     <Dialog open={!!confirm} onClose={() => setConfirm(null)} title={`Đã thu gom tại ${confirm?.id ?? ''}?`} footer={<><Button onClick={() => setConfirm(null)}>Chưa thu gom</Button><Button variant="primary" disabled={busy} onClick={() => confirm && void act('collected', confirm.id)}>Xác nhận hoàn thành</Button></>}>
       <p>Xác nhận cập nhật tiến độ cho điều phối viên. Khối lượng thực tế và chứng từ EPR cần được ghi nhận riêng khi cân tại điểm tiếp nhận.</p>

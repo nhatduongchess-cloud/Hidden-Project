@@ -88,7 +88,7 @@ export function Forecasts() {
         <Icon name="info" size={18} />
         <p>
           Dự báo từ bản ghi đã đồng bộ, theo giờ trong ngày và ngày trong tuần. Khung giờ mở cửa được tính vào thời điểm đầy.{' '}
-          <strong>Dữ liệu minh họa, chưa kiểm chứng ngoài thực tế.</strong>
+          <strong>Kết quả hiện được tính từ dữ liệu mẫu.</strong>
         </p>
       </div>
       <div className="card mb-5 grid gap-4 p-4 sm:grid-cols-[180px_280px_1fr]">
@@ -200,7 +200,7 @@ export function Forecasts() {
               Mô hình làm trơn lịch sử, không phải cam kết thời điểm đầy. Các ngày ít giao dịch do mất kết nối hoặc thùng đầy có thể khiến
               dự báo thấp hơn nhu cầu thật. Thời gian hiển thị theo Việt Nam (GMT+7).
             </p>
-            <DemoTag>Dự báo thử nghiệm</DemoTag>
+            <DemoTag>Dự báo từ dữ liệu mẫu</DemoTag>
           </div>
         </Panel>
       </div>

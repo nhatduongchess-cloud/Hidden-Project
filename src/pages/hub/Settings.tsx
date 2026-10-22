@@ -119,7 +119,7 @@ export function HubSettings() {
 
         <MapPlaces />
 
-        <Panel title="Dữ liệu demo" className="lg:col-span-2">
+        <Panel title="Dữ liệu mẫu" className="lg:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="max-w-[60ch] text-sm text-ink-2">
               {n0(state.transactions.length)} giao dịch, {state.batches.length} lô, {state.tasks.length} yêu cầu, {state.routes.length} tuyến. Dữ liệu là hư cấu và chỉ lưu trong trình duyệt này.
@@ -134,7 +134,7 @@ export function HubSettings() {
       <Dialog
         open={reset}
         onClose={() => setReset(false)}
-        title="Khôi phục dữ liệu demo?"
+        title="Khôi phục dữ liệu mẫu?"
         footer={
           <>
             <Button onClick={() => setReset(false)}>Hủy</Button>
@@ -143,7 +143,7 @@ export function HubSettings() {
               onClick={() => {
                 store.reset();
                 setReset(false);
-                toast('Đã khôi phục dữ liệu demo ban đầu.');
+                toast('Đã khôi phục dữ liệu mẫu ban đầu.');
               }}
             >
               Khôi phục
@@ -254,7 +254,7 @@ function MapPlaces() {
           </>
         }
       >
-        Vị trí ba trạm, bãi xe, điểm tiếp nhận và phạm vi thu gom trở về điểm minh họa ban đầu của khu vực {area.city}. Xe được đưa về bãi.
+        Vị trí ba trạm, bãi xe, điểm tiếp nhận và phạm vi thu gom trở về tọa độ mẫu ban đầu của khu vực {area.city}. Xe được đưa về bãi.
       </Dialog>
     </Panel>
   );

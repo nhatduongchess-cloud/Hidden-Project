@@ -184,7 +184,7 @@ export function Overview() {
         title="Tổng quan"
         sub={
           <span className="inline-flex flex-wrap items-center gap-2">
-            Điều hành mạng lưới · {state.stations.length} trạm minh họa · {dateTime(now)} <DemoTag />
+            Điều hành mạng lưới · {state.stations.length} trạm · {dateTime(now)} <DemoTag />
           </span>
         }
         actions={<a href="#hub-routes" className="btn btn-primary"><Icon name="route" size={17}/>Lập tuyến thu gom</a>}

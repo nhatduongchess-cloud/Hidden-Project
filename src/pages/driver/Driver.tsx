@@ -20,7 +20,7 @@ const SKIP_REASONS = ['Không vào được trạm', 'Trạm đang bảo trì', 
 const METRIC_NOTE: Record<NonNullable<AssignedRoute['metric']>, string> = {
   road: 'Quãng đường và thời gian theo đường thực tế lúc lập tuyến.',
   estimate: 'Quãng đường ước tính theo đường thẳng (chưa có dữ liệu đường lúc lập tuyến).',
-  mock: 'Khoảng cách từ ma trận minh họa.',
+  mock: 'Khoảng cách từ dữ liệu mẫu.',
 };
 
 function Shell({ children, route }: { children: React.ReactNode; route?: AssignedRoute }) {
@@ -109,7 +109,7 @@ export function DriverExperience() {
             action={
               <div className="flex flex-col items-center gap-2">
                 <Button variant="primary" icon="route" onClick={createDemo}>
-                  Nhận tuyến demo từ RE Hub
+                  Nhận tuyến gợi ý
                 </Button>
                 <a href="#hub-routes" className="link text-sm">
                   Mở Tuyến thu gom trong RE Hub
@@ -174,7 +174,7 @@ export function DriverExperience() {
         </ol>
         <div className="mt-2 flex items-center gap-2 rounded bg-sunk px-3 py-2 text-sm text-ink-2">
           <Icon name="flag" size={16} />
-          Kết thúc: {route.endAt === 'PARTNER' ? 'Đối tác tiếp nhận (minh họa)' : 'Kho RE (minh họa)'}
+          Kết thúc: {route.endAt === 'PARTNER' ? 'Đối tác tiếp nhận' : 'Kho RE'}
         </div>
         <Button variant="primary" size="lg" icon="play" className="mt-5 w-full" onClick={() => store.dispatch({ type: 'START_ROUTE', routeId: route.id })}>
           Bắt đầu tuyến
@@ -358,7 +358,7 @@ export function DriverExperience() {
       </ol>
       <div className="mt-1 flex items-center gap-2 rounded bg-sunk px-3 py-2 text-sm text-ink-2">
         <Icon name="flag" size={16} />
-        Kết thúc: {route.endAt === 'PARTNER' ? 'Đối tác tiếp nhận (minh họa)' : 'Kho RE (minh họa)'}
+        Kết thúc: {route.endAt === 'PARTNER' ? 'Đối tác tiếp nhận' : 'Kho RE'}
       </div>
 
       <SwapDialog

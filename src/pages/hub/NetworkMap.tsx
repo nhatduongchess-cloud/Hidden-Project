@@ -132,7 +132,7 @@ export function NetworkMap() {
         </div>
       )}
       <p className="px-4 pb-3 text-[11px] text-muted">
-        <Badge tone="slate">Vị trí minh họa</Badge> Bản đồ nền OpenStreetMap. Chọn trạm để xem mức đầy và trạng thái.
+        <Badge tone="slate">Tọa độ mẫu</Badge> Bản đồ nền OpenStreetMap. Chọn trạm để xem mức đầy và trạng thái.
       </p>
     </div>
   );

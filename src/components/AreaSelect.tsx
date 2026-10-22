@@ -7,7 +7,7 @@ import { toast } from './ui';
  * Which city the illustrative stations, depot and receiving point are in. Changing it moves all of
  * them at once (and the truck back to the depot), so the map, routes and navigation follow.
  */
-export function AreaSelect({ id, label = 'Khu vực minh họa', className = '' }: { id: string; label?: string; className?: string }) {
+export function AreaSelect({ id, label = 'Khu vực dữ liệu mẫu', className = '' }: { id: string; label?: string; className?: string }) {
   const state = useAppState();
   const store = useStore();
   const current = areaById(state.settings.areaId);
@@ -23,7 +23,7 @@ export function AreaSelect({ id, label = 'Khu vực minh họa', className = '' 
           value={current.id}
           onChange={(e) => {
             store.dispatch({ type: 'APPLY_AREA', areaId: e.target.value });
-            toast(`Đã chuyển trạm minh họa tới ${areaById(e.target.value).city}.`);
+            toast(`Đã chuyển dữ liệu trạm tới ${areaById(e.target.value).city}.`);
           }}
         >
           {REGIONS.map((r) => (

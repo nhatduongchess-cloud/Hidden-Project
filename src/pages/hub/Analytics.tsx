@@ -225,7 +225,7 @@ export function Kpis() {
       />
       <div className="ops-note mb-5">
         <p>
-          <strong>KPI minh họa.</strong> Khối lượng lấy từ bản ghi thu gom; quãng đường là kế hoạch, chưa có công-tơ-mét thực tế. Chi phí
+          <strong>KPI từ dữ liệu mẫu.</strong> Khối lượng lấy từ bản ghi thu gom; quãng đường là kế hoạch, chưa có công-tơ-mét thực tế. Chi phí
           bên dưới là giả định có thể thay đổi.
         </p>
       </div>

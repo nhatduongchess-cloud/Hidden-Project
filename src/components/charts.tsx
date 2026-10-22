@@ -17,7 +17,7 @@ export function DailyBars({ data, label, unit = 'kg' }: { data: { day: number; k
         {ticks.map((t) => (
           <g key={t}>
             <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke="rgb(var(--c-line))" strokeWidth={1} />
-            <text x={pad.l - 6} y={y(t) + 4} textAnchor="end" fontSize={10.5} fill="rgb(var(--c-muted))" fontFamily="JetBrains Mono, monospace">
+            <text x={pad.l - 6} y={y(t) + 4} textAnchor="end" fontSize={10.5} fill="rgb(var(--c-muted))" fontFamily="Source Sans 3 Variable, monospace">
               {n1(t)}
             </text>
           </g>
@@ -32,14 +32,14 @@ export function DailyBars({ data, label, unit = 'kg' }: { data: { day: number; k
                 <title>{`${date.getDate()}/${date.getMonth() + 1}: ${n1(d.kg)} ${unit}`}</title>
               </rect>
               {(i % Math.max(1, Math.ceil(data.length / 8)) === 0 || last) && (
-                <text x={x + bw * 0.32} y={Hh - 10} textAnchor="middle" fontSize={10} fill="rgb(var(--c-muted))" fontFamily="JetBrains Mono, monospace">
+                <text x={x + bw * 0.32} y={Hh - 10} textAnchor="middle" fontSize={10} fill="rgb(var(--c-muted))" fontFamily="Source Sans 3 Variable, monospace">
                   {`${date.getDate()}/${date.getMonth() + 1}`}
                 </text>
               )}
             </g>
           );
         })}
-        <text x={pad.l} y={9} fontSize={10} fill="rgb(var(--c-muted))" fontFamily="JetBrains Mono, monospace">
+        <text x={pad.l} y={9} fontSize={10} fill="rgb(var(--c-muted))" fontFamily="Source Sans 3 Variable, monospace">
           {unit}
         </text>
       </svg>

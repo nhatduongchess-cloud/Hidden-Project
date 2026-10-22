@@ -57,7 +57,7 @@ function ActiveRoute({ route }: { route: AssignedRoute }) {
           )}
         </span>
       }
-      actions={<DemoTag>Tuyến minh họa</DemoTag>}
+      actions={<DemoTag>Dữ liệu trạm mẫu</DemoTag>}
       className="mb-5"
     >
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -236,7 +236,7 @@ export function Routes() {
       <div className="border-t border-line pt-4">
         <Switch id="rt-bans" label="Áp dụng khung giờ cấm xe" hint="Tự nhập theo khu vực đang vận hành" checked={!!cfg.drivingBans?.length} onChange={on => set('drivingBans', on ? [{ start:'06:00',end:'09:00' }] : [])}/>
         {cfg.drivingBans?.map((ban, i) => <div key={i} className="mt-3 grid grid-cols-[1fr_1fr_auto] items-end gap-2"><div><label htmlFor={`ban-start-${i}`} className="field-label">Cấm từ</label><input id={`ban-start-${i}`} type="time" className="input" value={ban.start} onChange={e => set('drivingBans', cfg.drivingBans!.map((b,j) => j === i ? { ...b,start:e.target.value } : b))}/></div><div><label htmlFor={`ban-end-${i}`} className="field-label">Đến</label><input id={`ban-end-${i}`} type="time" className="input" value={ban.end} onChange={e => set('drivingBans', cfg.drivingBans!.map((b,j) => j === i ? { ...b,end:e.target.value } : b))}/></div><Button variant="ghost" onClick={() => set('drivingBans', cfg.drivingBans!.filter((_,j) => j !== i))} aria-label={`Xóa khung cấm ${i + 1}`}>×</Button></div>)}
-        {!!cfg.drivingBans?.length && <><Button size="sm" variant="ghost" onClick={() => set('drivingBans', [...cfg.drivingBans!, { start:'16:00',end:'19:00' }])}>Thêm khung giờ</Button><p className="mt-2 text-xs text-muted">Giờ minh họa, cần chỉnh theo khu vực. Mọi chặng, kể cả về điểm cuối, phải đi ngoài khung cấm; xe chờ tại điểm xuất phát của chặng.</p></>}
+        {!!cfg.drivingBans?.length && <><Button size="sm" variant="ghost" onClick={() => set('drivingBans', [...cfg.drivingBans!, { start:'16:00',end:'19:00' }])}>Thêm khung giờ</Button><p className="mt-2 text-xs text-muted">Điều chỉnh giờ cấm theo khu vực vận hành. Mọi chặng, kể cả về điểm cuối, phải đi ngoài khung cấm; xe chờ tại điểm xuất phát của chặng.</p></>}
       </div>
       <div className="grid grid-cols-2 gap-3 border-t border-line pt-4">
         <NumberField id="rt-thr" label="Ngưỡng thu gom" unit="%" value={cfg.thresholdPct} min={1} max={95} step={1} onChange={(v) => set('thresholdPct', v)} />
@@ -270,7 +270,7 @@ export function Routes() {
         title="Tuyến thu gom"
         sub={
           <span className="inline-flex flex-wrap items-center gap-2">
-            Lập và giao tuyến cho tài xế <DemoTag>Tuyến minh họa</DemoTag>
+            Lập và giao tuyến cho tài xế <DemoTag>Dữ liệu trạm mẫu</DemoTag>
           </span>
         }
       />
@@ -312,7 +312,7 @@ export function Routes() {
 
             {plan.planned && plan.baseline && (
               <>
-                <Panel title="Tuyến đề xuất" actions={<DemoTag>Tuyến minh họa</DemoTag>}>
+                <Panel title="Tuyến đề xuất" actions={<DemoTag>Dữ liệu trạm mẫu</DemoTag>}>
                   <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                     <div className="min-w-0">
                       <div className="mb-3">
@@ -379,7 +379,7 @@ export function Routes() {
                           <span className="grid h-6 w-6 place-items-center rounded-sm bg-ink text-paper">
                             <Icon name="flag" size={13} />
                           </span>
-                          {cfg.endAt === PARTNER ? 'Đối tác tiếp nhận (minh họa)' : 'Kho RE (minh họa)'} · {fmtMin(plan.planned.finishMin)}
+                          {cfg.endAt === PARTNER ? 'Đối tác tiếp nhận' : 'Kho RE'} · {fmtMin(plan.planned.finishMin)}
                         </li>
                       </ol>
                     </div>

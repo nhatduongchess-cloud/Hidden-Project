@@ -55,7 +55,7 @@ export function Fleet() {
       actions={<span role="status" className={`rounded-full px-3 py-1.5 text-xs font-medium ${connected ? 'bg-forest-tint text-forest-ink' : 'bg-amber-tint text-amber-ink'}`}>{connection}</span>} />
     {error && <div className="mb-4"><Alert tone="stop" title="Chưa hoàn tất thao tác">{error}</Alert></div>}
     {!key ? <Panel title="Kết nối đơn vị vận hành"><form className="max-w-lg space-y-4" onSubmit={e => { e.preventDefault(); void run('Kết nối…', async () => { await fleetRequest('/fleet', enteredKey); remember(enteredKey); setEnteredKey(''); }); }}>
-      <p className="text-sm text-muted">Nhập khóa do quản trị viên cung cấp. Trên máy phát triển, dịch vụ có thể cho phép kết nối tự động.</p>
+      <p className="text-sm text-muted">Nhập khóa do quản trị viên cung cấp để lập kế hoạch, giao tuyến và theo dõi đội xe của đơn vị.</p>
       <TextField id="fleet-key" label="Khóa điều phối" type="password" value={enteredKey} onChange={setEnteredKey} />
       <Button type="submit" variant="primary" disabled={!!busy || !enteredKey}>{busy || 'Kết nối đội xe'}</Button>
     </form></Panel> : <>
@@ -92,7 +92,7 @@ export function Fleet() {
               <Button size="sm" onClick={() => setBans(bans.filter((_, j) => i !== j))}>Bỏ</Button>
             </div>)}<Button size="sm" disabled={bans.length >= 4} onClick={() => setBans([...bans, { start: 660, end: 780 }])}>Thêm khoảng cấm</Button>
           </details>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="max-w-xl text-xs text-muted">Trạm ≥{state.settings.warnPct}% hoặc dự báo đạt ngưỡng phải được ghé. Ưu tiên sớm trạm ≥{state.settings.stopPct}%. Kết thúc tại {state.settings.partner.name}. Khối lượng trạm hiện là dữ liệu demo.</p>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="max-w-xl text-xs text-muted">Trạm ≥{state.settings.warnPct}% hoặc dự báo đạt ngưỡng phải được ghé. Ưu tiên sớm trạm ≥{state.settings.stopPct}%. Kết thúc tại {state.settings.partner.name}. Khối lượng trạm hiện sử dụng dữ liệu mẫu.</p>
             <Button type="submit" variant="primary" icon="route" disabled={!!busy || !connected}>{busy || 'Tối ưu nhiều xe'}</Button></div>
         </Panel>
       </fieldset></form>}
@@ -125,7 +125,7 @@ export function Fleet() {
             </div>}
           </Panel>;
         })}</div>
-        {view === 'live' && <p className="text-xs text-muted">Giữ trang tài xế mở để gửi GPS; báo mất tín hiệu sau 30 giây. Điện thoại cần truy cập cùng địa chỉ HTTPS của hệ thống. Bản chạy localhost chỉ dùng trên máy này.</p>}
+        {view === 'live' && <p className="text-xs text-muted">Tài xế cần giữ trang mở và bật chia sẻ vị trí. Hệ thống báo mất tín hiệu khi không nhận được cập nhật trong 30 giây.</p>}
       </div>}
     </>}
     <Dialog open={endOpen} onClose={() => setEndOpen(false)} title="Kết thúc đợt điều phối?" footer={<><Button onClick={() => setEndOpen(false)}>Giữ các chuyến</Button><Button variant="danger" disabled={!!busy} onClick={() => void run('Đang kết thúc…', async () => { const data = await fleetRequest<FleetSnapshot>('/fleet/end', key, {}); setFleet(data); setLinks([]); setEndOpen(false); })}>Kết thúc và thu hồi liên kết</Button></>}>

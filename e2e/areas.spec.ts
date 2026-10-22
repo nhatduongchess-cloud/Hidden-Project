@@ -32,11 +32,11 @@ test('pick Hà Nội in Hub settings, then the driver ranks and navigates to sta
   await mockMapServices(page);
   const lats = routedLatitudes(page);
   await page.goto('/#hub-settings');
-  await page.getByRole('combobox', { name: 'Khu vực minh họa' }).selectOption('hn');
+  await page.getByRole('combobox', { name: 'Khu vực dữ liệu mẫu' }).selectOption('hn');
   await expect(page.getByRole('spinbutton', { name: 'Vĩ độ RE-001' })).toHaveValue(/^21\./);
 
   await page.goto('/#driver-map');
-  await expect(page.getByRole('combobox', { name: 'Khu vực minh họa' })).toHaveValue('hn');
+  await expect(page.getByRole('combobox', { name: 'Khu vực dữ liệu mẫu' })).toHaveValue('hn');
   const list = page.getByRole('list', { name: 'Trạm cần thu gom, nhanh nhất trước' });
   await expect(list.getByRole('listitem')).toHaveCount(3);
   await expect(page.getByText(/Đường thực tế · Valhalla/).first()).toBeVisible();
@@ -52,12 +52,12 @@ test('pick Hà Nội in Hub settings, then the driver ranks and navigates to sta
 test('the area menu on the driver map and in RE Hub moves everything, and reset keeps the area', async ({ page }) => {
   await mockMapServices(page);
   await page.goto('/#driver-map');
-  await page.getByRole('combobox', { name: 'Khu vực minh họa' }).selectOption('dn');
-  await expect(page.getByText('Đã chuyển trạm minh họa tới Đà Nẵng.')).toBeVisible();
+  await page.getByRole('combobox', { name: 'Khu vực dữ liệu mẫu' }).selectOption('dn');
+  await expect(page.getByText('Đã chuyển dữ liệu trạm tới Đà Nẵng.')).toBeVisible();
   await expect(page.getByRole('list', { name: 'Trạm cần thu gom, nhanh nhất trước' }).getByRole('listitem')).toHaveCount(3);
 
   await page.goto('/#hub-settings');
-  const area = page.getByRole('combobox', { name: 'Khu vực minh họa' });
+  const area = page.getByRole('combobox', { name: 'Khu vực dữ liệu mẫu' });
   await expect(area).toHaveValue('dn');
   await expect(page.getByRole('spinbutton', { name: 'Vĩ độ RE-001' })).toHaveValue(/^16\.07/);
   await area.selectOption('ct');
@@ -80,7 +80,7 @@ test.describe('a phone in another city', () => {
     await page.getByRole('button', { name: 'Lấy GPS' }).click();
     await expect(page.getByText(/Xe đang cách phạm vi thu gom \d+ km/)).toBeVisible();
     await page.getByRole('button', { name: 'Chuyển sang Hà Nội' }).click();
-    await expect(page.getByRole('combobox', { name: 'Khu vực minh họa' })).toHaveValue('hn');
+    await expect(page.getByRole('combobox', { name: 'Khu vực dữ liệu mẫu' })).toHaveValue('hn');
     await expect(page.getByText(/Xe đang cách phạm vi thu gom/)).toHaveCount(0);
     // The truck stays where the GPS put it.
     await expect(page.getByText('Vị trí cuối 21.02850, 105.85420')).toBeVisible();
@@ -91,7 +91,7 @@ test('on a phone the station map can switch collection areas', async ({ page }) 
   await mockMapServices(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/#hub-map');
-  await page.getByRole('combobox', { name: 'Khu vực minh họa' }).selectOption('ct');
-  await expect(page.getByRole('combobox', { name: 'Khu vực minh họa' })).toHaveValue('ct');
+  await page.getByRole('combobox', { name: 'Khu vực dữ liệu mẫu' }).selectOption('ct');
+  await expect(page.getByRole('combobox', { name: 'Khu vực dữ liệu mẫu' })).toHaveValue('ct');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

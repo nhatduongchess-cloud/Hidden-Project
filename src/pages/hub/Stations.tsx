@@ -39,7 +39,7 @@ export function StationsList() {
         title="Trạm thu gom"
         sub={
           <span className="inline-flex flex-wrap items-center gap-2">
-            {state.stations.length} trạm thí điểm · số liệu RE Hub đã nhận <DemoTag />
+            {state.stations.length} trạm · số liệu RE Hub đã nhận <DemoTag />
           </span>
         }
       />
@@ -186,7 +186,7 @@ function BinGauge({ pct, warn, stop, stale }: { pct: number; warn: number; stop:
       ].map(([v, c, l]) => (
         <g key={String(l)}>
           <line x1="4" x2="68" y1={y(v as number)} y2={y(v as number)} stroke={c as string} strokeWidth="1.5" strokeDasharray="3 2" />
-          <text x="72" y={y(v as number) + 3.5} fontSize="10" fill={c as string} fontFamily="Be Vietnam Pro, sans-serif">
+          <text x="72" y={y(v as number) + 3.5} fontSize="10" fill={c as string} fontFamily="Source Sans 3 Variable, sans-serif">
             {l}
           </text>
         </g>
@@ -253,7 +253,7 @@ export function StationDetail({ id }: { id: string }) {
   if (!st || !o || !life) {
     return (
       <EmptyState icon="station" title="Không tìm thấy trạm" action={<a href="#hub-stations" className="btn btn-secondary">Về danh sách trạm</a>}>
-        Mã trạm “{id}” không có trong dữ liệu demo.
+        Mã trạm “{id}” không có trong danh sách trạm.
       </EmptyState>
     );
   }

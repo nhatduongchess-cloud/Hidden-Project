@@ -198,7 +198,7 @@ export function Navigation({ targetId }: { targetId: string }) {
     return (
       <main id="main" tabIndex={-1} className="mx-auto max-w-[480px] px-4 py-10 outline-none">
         <h1 className="text-xl font-semibold text-ink">Không tìm thấy điểm đến</h1>
-        <p className="mt-1 text-sm text-ink-2">Mã “{targetId}” không có trong dữ liệu demo.</p>
+        <p className="mt-1 text-sm text-ink-2">Mã “{targetId}” không có trong danh sách điểm thu gom.</p>
         <a href="#driver-map" className="btn btn-secondary mt-4">
           <Icon name="arrowLeft" size={16} /> Danh sách trạm
         </a>

@@ -229,9 +229,9 @@ export function Skeleton({ className = '' }: { className?: string }) {
   return <div className={`skeleton ${className}`} aria-hidden />;
 }
 
-export function DemoTag({ children = 'Dữ liệu demo' }: { children?: ReactNode }) {
+export function DemoTag({ children = 'Dữ liệu mẫu' }: { children?: ReactNode }) {
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-sm border border-line-strong bg-panel px-1.5 py-px font-mono text-[10.5px] font-medium uppercase tracking-wider text-muted">
+    <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-line bg-sunk px-2 py-0.5 text-xs font-medium text-muted">
       {children}
     </span>
   );
