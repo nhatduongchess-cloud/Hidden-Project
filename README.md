@@ -1,5 +1,8 @@
 # RE Hub
 
+Ứng dụng thành viên iOS/Android **REwards** nằm tại [`apps/rewards`](apps/rewards/README.md):
+đăng nhập, điểm thưởng, danh mục đổi quà và ví quà với dịch vụ lưu trữ riêng.
+
 Web quản lý vận hành thu gom, giao diện tiếng Việt. Mở ứng dụng là vào Tổng quan;
 không còn trang giới thiệu dự án, thiết kế máy, ứng dụng trả chai hoặc thanh chuyển bản mẫu.
 Các URL cũ như `#home`, `#pilot`, `#design`, `#app-return` chuyển về `#hub`.

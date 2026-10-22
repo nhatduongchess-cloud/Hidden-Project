@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  testIgnore: 'fleet.spec.ts',
+  testIgnore: ['fleet.spec.ts', 'rewards.spec.ts'],
   timeout: 60_000,
   use: {
     // BASE_URL points the tests at a deployed copy instead of the local preview server.

@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "REwards",
+    "slug": "re-rewards",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rehub.rewards",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.rehub.rewards",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#175C44"
+      }
+    },
+    "web": {
+      "favicon": "./assets/icon.png",
+      "name": "REwards",
+      "description": "TÃ­ch Ä‘iá»ƒm xanh, Ä‘á»•i quÃ  báº¡n thÃ­ch",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-router"
+    ],
+    "scheme": "rerewards"
+  }
+}
